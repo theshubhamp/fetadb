@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	pgx "github.com/jackc/pgx/v5/pgproto3"
-	_ "github.com/pganalyze/pg_query_go/v5"
+	pgquery "github.com/pganalyze/pg_query_go/v5"
 	_ "github.com/syndtr/goleveldb/leveldb"
 	"log"
 	"net"
@@ -11,7 +11,6 @@ import (
 
 var options struct {
 	listenAddress string
-	remoteAddress string
 }
 
 func main() {
@@ -82,5 +81,31 @@ func handleIncomingConnection(conn net.Conn) {
 		}
 
 		log.Printf("received message from connection: %T(%v)", msg, msg)
+		err = handleMessage(msg)
+		if err != nil {
+			log.Printf("failed to handle message: %v", err)
+			return
+		}
 	}
+}
+
+func handleMessage(msg pgx.FrontendMessage) error {
+	switch msg := msg.(type) {
+	case *pgx.Parse:
+		log.Printf("query: %v", msg.Query)
+		parseResult, err := pgquery.Parse(msg.Query)
+		if err != nil {
+			return err
+		}
+		log.Printf("parsed query: %v", parseResult)
+		break
+	case *pgx.Bind:
+		break
+	case *pgx.Execute:
+		break
+	case *pgx.Sync:
+		break
+	}
+
+	return nil
 }
