@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
+	_ "github.com/dgraph-io/badger/v4"
 	pgx "github.com/jackc/pgx/v5/pgproto3"
 	pgquery "github.com/pganalyze/pg_query_go/v5"
-	_ "github.com/syndtr/goleveldb/leveldb"
 	"log"
 	"net"
 )
