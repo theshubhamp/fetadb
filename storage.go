@@ -20,7 +20,7 @@ func ScanTableFull(db *badger.DB, schema TableSchema) (DataFrame, error) {
 
 		columns := map[uint64]*Column{}
 
-		prefix := kv.NewKey().TableID(schema.ID).IndexID(0)
+		prefix := kv.NewKey().TableID(schema.ID).IndexID(schema.IndexID)
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
 			_, _, _, columnID := kv.Key(item.Key()).Decode()
