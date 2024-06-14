@@ -1,13 +1,14 @@
-package main
+package node
 
 import (
+	"fetadb/internal"
 	"fetadb/kv"
 	"fetadb/kv/encoding"
 	"github.com/dgraph-io/badger/v4"
 	"testing"
 )
 
-func TestScanTableFull(t *testing.T) {
+func TestSeqScan(t *testing.T) {
 	tableID := uint64(1)
 
 	opt := badger.DefaultOptions("").WithInMemory(true)
@@ -19,7 +20,7 @@ func TestScanTableFull(t *testing.T) {
 
 	tx := db.NewTransaction(true)
 	for idx, letter := range []string{"A", "B", "C", "D"} {
-		err := tx.Set(kv.NewKey().TableID(tableID).IndexID(0).IndexValue(uint64(idx)).ColumnID(0), encoding.Encode(letter))
+		err := tx.Set(kv.NewKey().TableID(tableID).IndexID(internal.DefaultIndex).IndexValue(uint64(idx)).ColumnID(0), encoding.Encode(letter))
 		if err != nil {
 			t.Errorf("failed to write to db: %v", err)
 			tx.Discard()
@@ -32,10 +33,9 @@ func TestScanTableFull(t *testing.T) {
 		return
 	}
 
-	df, err := ScanTableFull(db, TableSchema{
-		ID:      tableID,
-		IndexID: 0,
-	})
+	df, err := SeqScan{
+		TableID: tableID,
+	}.Do(db)
 	if err != nil {
 		t.Errorf("failed to open db: %v", err)
 		return

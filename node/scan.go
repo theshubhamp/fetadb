@@ -1,33 +1,33 @@
-package main
+package node
 
 import (
+	"fetadb/internal"
 	"fetadb/kv"
 	"fetadb/kv/encoding"
 	"fmt"
 	"github.com/dgraph-io/badger/v4"
 )
 
-type TableSchema struct {
-	ID      uint64
-	IndexID uint64
+type SeqScan struct {
+	TableID uint64
 }
 
-func ScanTableFull(db *badger.DB, schema TableSchema) (DataFrame, error) {
-	results := DataFrame{}
+func (s SeqScan) Do(db *badger.DB) (internal.DataFrame, error) {
+	results := internal.DataFrame{}
 	return results, db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
 
-		columns := map[uint64]*Column{}
+		columns := map[uint64]*internal.Column{}
 
-		prefix := kv.NewKey().TableID(schema.ID).IndexID(schema.IndexID)
+		prefix := kv.NewKey().TableID(s.TableID).IndexID(internal.DefaultIndex)
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
 			_, _, _, columnID := kv.Key(item.Key()).Decode()
 
 			column, ok := columns[columnID]
 			if !ok {
-				column = &Column{
+				column = &internal.Column{
 					ID:    columnID,
 					Items: []any{},
 				}
