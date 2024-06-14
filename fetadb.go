@@ -91,6 +91,16 @@ func handleIncomingConnection(conn net.Conn) {
 
 func handleMessage(backend *pgx.Backend, msg pgx.FrontendMessage) error {
 	switch msg := msg.(type) {
+	case *pgx.Query:
+		log.Printf("query: %v", msg.String)
+		parseResult, err := pgquery.Parse(msg.String)
+		if err != nil {
+			return err
+		}
+		log.Printf("parsed query: %v", parseResult)
+		backend.Send(&pgx.CommandComplete{})
+		backend.Send(&pgx.ReadyForQuery{TxStatus: 'I'})
+		break
 	case *pgx.Parse:
 		log.Printf("query: %v", msg.Query)
 		parseResult, err := pgquery.Parse(msg.Query)
