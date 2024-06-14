@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fetadb/pkg/sql"
 	"flag"
 	_ "github.com/dgraph-io/badger/v4"
 	pgx "github.com/jackc/pgx/v5/pgproto3"
@@ -93,11 +94,14 @@ func handleMessage(backend *pgx.Backend, msg pgx.FrontendMessage) error {
 	switch msg := msg.(type) {
 	case *pgx.Query:
 		log.Printf("query: %v", msg.String)
+
 		parseResult, err := pgquery.Parse(msg.String)
 		if err != nil {
 			return err
 		}
-		log.Printf("parsed query: %v", parseResult)
+		statements := sql.FromParseResult(parseResult)
+
+		log.Printf("statements: %v", statements)
 		backend.Send(&pgx.CommandComplete{})
 		backend.Send(&pgx.ReadyForQuery{TxStatus: 'I'})
 		break
