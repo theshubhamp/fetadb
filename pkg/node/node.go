@@ -1,7 +1,7 @@
 package node
 
 import (
-	"fetadb/internal"
+	"fetadb/pkg/internal"
 	"github.com/dgraph-io/badger/v4"
 )
 

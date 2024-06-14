@@ -1,9 +1,9 @@
 package node
 
 import (
-	"fetadb/internal"
-	"fetadb/kv"
-	"fetadb/kv/encoding"
+	"fetadb/pkg/internal"
+	"fetadb/pkg/kv"
+	"fetadb/pkg/kv/encoding"
 	"github.com/dgraph-io/badger/v4"
 	"testing"
 )
