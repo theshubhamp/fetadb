@@ -81,7 +81,7 @@ func handleIncomingConnection(conn net.Conn) {
 		}
 
 		log.Printf("received message from connection: %T(%v)", msg, msg)
-		err = handleMessage(msg)
+		err = handleMessage(backend, msg)
 		if err != nil {
 			log.Printf("failed to handle message: %v", err)
 			return
@@ -89,7 +89,7 @@ func handleIncomingConnection(conn net.Conn) {
 	}
 }
 
-func handleMessage(msg pgx.FrontendMessage) error {
+func handleMessage(backend *pgx.Backend, msg pgx.FrontendMessage) error {
 	switch msg := msg.(type) {
 	case *pgx.Parse:
 		log.Printf("query: %v", msg.Query)
@@ -98,14 +98,20 @@ func handleMessage(msg pgx.FrontendMessage) error {
 			return err
 		}
 		log.Printf("parsed query: %v", parseResult)
+		backend.Send(&pgx.ParseComplete{})
 		break
 	case *pgx.Bind:
+		backend.Send(&pgx.BindComplete{})
 		break
 	case *pgx.Execute:
+		backend.Send(&pgx.CommandComplete{})
+		backend.Send(&pgx.ReadyForQuery{TxStatus: 'I'})
 		break
 	case *pgx.Sync:
+		backend.Send(&pgx.ReadyForQuery{TxStatus: 'I'})
 		break
 	}
 
+	backend.Flush()
 	return nil
 }
