@@ -99,7 +99,7 @@ func handleMessage(backend *pgx.Backend, msg pgx.FrontendMessage) error {
 		if err != nil {
 			return err
 		}
-		statements := sql.FromParseResult(parseResult)
+		statements := sql.ToStatements(parseResult)
 
 		log.Printf("statements: %v", statements)
 		backend.Send(&pgx.CommandComplete{})
