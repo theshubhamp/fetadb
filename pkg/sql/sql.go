@@ -22,6 +22,15 @@ func FromStmt(stmt *pg_query.RawStmt) Statement {
 }
 
 func FromSelectStmt(selectStmt *pg_query.SelectStmt) Select {
+	targets := []Target{}
+	for _, targetItem := range selectStmt.GetTargetList() {
+		target := Target{
+			Name:  targetItem.GetResTarget().GetName(),
+			Value: ExprFromNode(targetItem.GetResTarget().GetVal()),
+		}
+		targets = append(targets, target)
+	}
+
 	froms := []From{}
 	for _, fromClause := range selectStmt.GetFromClause() {
 		rangeVar := fromClause.GetRangeVar()
@@ -35,8 +44,9 @@ func FromSelectStmt(selectStmt *pg_query.SelectStmt) Select {
 	}
 
 	return Select{
-		From:  froms,
-		Where: FromExpr(selectStmt.GetWhereClause().GetAExpr()),
+		Targets: targets,
+		From:    froms,
+		Where:   FromExpr(selectStmt.GetWhereClause().GetAExpr()),
 	}
 }
 
@@ -59,15 +69,15 @@ func FromOperator(aexpr *pg_query.A_Expr) Expression {
 	switch op {
 	case "=":
 		return Equals{
-			Left:  FromOperand(aexpr.GetLexpr()),
-			Right: FromOperand(aexpr.GetRexpr()),
+			Left:  ExprFromNode(aexpr.GetLexpr()),
+			Right: ExprFromNode(aexpr.GetRexpr()),
 		}
 	}
 
 	return nil
 }
 
-func FromOperand(node *pg_query.Node) Expression {
+func ExprFromNode(node *pg_query.Node) Expression {
 	if node.GetColumnRef() != nil {
 		refs := []string{}
 		for _, field := range node.GetColumnRef().Fields {
