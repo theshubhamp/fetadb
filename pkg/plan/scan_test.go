@@ -1,4 +1,4 @@
-package node
+package plan
 
 import (
 	"fetadb/pkg/internal"
