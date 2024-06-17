@@ -34,8 +34,9 @@ func TestSeqScan(t *testing.T) {
 	}
 
 	df, err := SeqScan{
+		DB:      db,
 		TableID: tableID,
-	}.Do(db)
+	}.Do()
 	if err != nil {
 		t.Errorf("failed to open db: %v", err)
 		return

@@ -9,12 +9,13 @@ import (
 )
 
 type SeqScan struct {
+	DB      *badger.DB
 	TableID uint64
 }
 
-func (s SeqScan) Do(db *badger.DB) (internal.DataFrame, error) {
+func (s SeqScan) Do() (internal.DataFrame, error) {
 	results := internal.DataFrame{}
-	return results, db.View(func(txn *badger.Txn) error {
+	return results, s.DB.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
 
