@@ -1,10 +1,10 @@
 package sql
 
 type Select struct {
-	Expressions []any
-	From        []From
-	Where       Expression
-	Having      Expression
+	Targets []any
+	From    []From
+	Where   Expression
+	Having  Expression
 }
 
 type From struct {

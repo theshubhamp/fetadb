@@ -69,7 +69,11 @@ func FromOperator(aexpr *pg_query.A_Expr) Expression {
 
 func FromOperand(node *pg_query.Node) Expression {
 	if node.GetColumnRef() != nil {
-		return ColumnRef{Name: node.GetColumnRef().Fields[0].GetString_().GetSval()}
+		refs := []string{}
+		for _, field := range node.GetColumnRef().Fields {
+			refs = append(refs, field.GetString_().GetSval())
+		}
+		return ColumnRef{Names: refs}
 	} else if node.GetAConst() != nil {
 		aconst := node.GetAConst()
 		if aconst.GetSval() != nil {

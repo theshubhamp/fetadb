@@ -1,6 +1,9 @@
 package sql
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Expression interface {
 	String() string
@@ -16,11 +19,11 @@ func (e Equals) String() string {
 }
 
 type ColumnRef struct {
-	Name string
+	Names []string
 }
 
 func (c ColumnRef) String() string {
-	return c.Name
+	return strings.Join(c.Names, ".")
 }
 
 type Literal struct {
