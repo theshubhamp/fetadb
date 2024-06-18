@@ -75,21 +75,11 @@ func ToExpression(node *pg_query.Node) Expression {
 			pg_query.A_Expr_Kind_AEXPR_ILIKE,
 			pg_query.A_Expr_Kind_AEXPR_OP_ALL,
 			pg_query.A_Expr_Kind_AEXPR_OP_ANY:
-			return ToOperator(node.GetAExpr())
-		}
-	}
-
-	return nil
-}
-
-func ToOperator(aexpr *pg_query.A_Expr) Expression {
-	op := aexpr.GetName()[0].GetString_().GetSval()
-
-	switch op {
-	case "=":
-		return Equals{
-			Left:  ToExpression(aexpr.GetLexpr()),
-			Right: ToExpression(aexpr.GetRexpr()),
+			return NewBinaryOperator(
+				node.GetAExpr().GetName()[0].GetString_().GetSval(),
+				ToExpression(node.GetAExpr().GetLexpr()),
+				ToExpression(node.GetAExpr().GetRexpr()),
+			)
 		}
 	}
 
