@@ -114,7 +114,7 @@ func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage)
 		statement := statements[0]
 
 		if selectStatement, ok := statement.(sql.Select); ok {
-			planNode := plan.PlanSelect(selectStatement)
+			planNode := plan.Select(selectStatement)
 
 			result, _ := planNode.Do()
 
