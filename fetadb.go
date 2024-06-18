@@ -1,9 +1,10 @@
 package main
 
 import (
+	"fetadb/pkg/plan"
 	"fetadb/pkg/sql"
+	"fetadb/pkg/util"
 	"flag"
-	_ "github.com/dgraph-io/badger/v4"
 	pgx "github.com/jackc/pgx/v5/pgproto3"
 	pgquery "github.com/pganalyze/pg_query_go/v5"
 	"log"
@@ -99,29 +100,22 @@ func handleMessage(backend *pgx.Backend, msg pgx.FrontendMessage) error {
 		if err != nil {
 			return err
 		}
-		statements := sql.ToStatements(parseResult)
 
-		log.Printf("statements: %v", statements)
-		backend.Send(&pgx.CommandComplete{})
-		backend.Send(&pgx.ReadyForQuery{TxStatus: 'I'})
-		break
-	case *pgx.Parse:
-		log.Printf("query: %v", msg.Query)
-		parseResult, err := pgquery.Parse(msg.Query)
-		if err != nil {
-			return err
+		statements := sql.ToStatements(parseResult)
+		statement := statements[0]
+
+		if selectStatement, ok := statement.(sql.Select); ok {
+			planNode := plan.PlanSelect(selectStatement)
+
+			result, _ := planNode.Do()
+
+			backend.Send(util.ToRowDescription(result))
+			for _, row := range util.ToDataRows(result) {
+				backend.Send(&row)
+			}
 		}
-		log.Printf("parsed query: %v", parseResult)
-		backend.Send(&pgx.ParseComplete{})
-		break
-	case *pgx.Bind:
-		backend.Send(&pgx.BindComplete{})
-		break
-	case *pgx.Execute:
+
 		backend.Send(&pgx.CommandComplete{})
-		backend.Send(&pgx.ReadyForQuery{TxStatus: 'I'})
-		break
-	case *pgx.Sync:
 		backend.Send(&pgx.ReadyForQuery{TxStatus: 'I'})
 		break
 	}

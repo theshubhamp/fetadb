@@ -1,4 +1,4 @@
-package internal
+package util
 
 const (
 	DefaultIndex = 0

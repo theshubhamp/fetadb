@@ -1,9 +1,9 @@
 package plan
 
 import (
-	"fetadb/pkg/internal"
+	"fetadb/pkg/util"
 )
 
 type Node interface {
-	Do() (internal.DataFrame, error)
+	Do() (util.DataFrame, error)
 }

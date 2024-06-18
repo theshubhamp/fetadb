@@ -1,9 +1,9 @@
 package plan
 
 import (
-	"fetadb/pkg/internal"
 	"fetadb/pkg/kv"
 	"fetadb/pkg/kv/encoding"
+	"fetadb/pkg/util"
 	"github.com/dgraph-io/badger/v4"
 	"testing"
 )
@@ -20,7 +20,7 @@ func TestSeqScan(t *testing.T) {
 
 	tx := db.NewTransaction(true)
 	for idx, letter := range []string{"A", "B", "C", "D"} {
-		err := tx.Set(kv.NewKey().TableID(tableID).IndexID(internal.DefaultIndex).IndexValue(uint64(idx)).ColumnID(0), encoding.Encode(letter))
+		err := tx.Set(kv.NewKey().TableID(tableID).IndexID(util.DefaultIndex).IndexValue(uint64(idx)).ColumnID(0), encoding.Encode(letter))
 		if err != nil {
 			t.Errorf("failed to write to db: %v", err)
 			tx.Discard()
