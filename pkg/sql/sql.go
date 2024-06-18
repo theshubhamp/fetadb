@@ -1,6 +1,9 @@
 package sql
 
-import pg_query "github.com/pganalyze/pg_query_go/v5"
+import (
+	"fetadb/pkg/sql/expr"
+	pg_query "github.com/pganalyze/pg_query_go/v5"
+)
 
 func ToStatements(parseResult *pg_query.ParseResult) []Statement {
 	statements := []Statement{}
@@ -50,23 +53,23 @@ func ToSelect(selectStmt *pg_query.SelectStmt) Select {
 	}
 }
 
-func ToExpression(node *pg_query.Node) Expression {
+func ToExpression(node *pg_query.Node) expr.Expression {
 	if node.GetColumnRef() != nil {
 		refs := []string{}
 		for _, field := range node.GetColumnRef().Fields {
 			refs = append(refs, field.GetString_().GetSval())
 		}
-		return ColumnRef{Names: refs}
+		return expr.ColumnRef{Names: refs}
 	} else if node.GetAConst() != nil {
 		aconst := node.GetAConst()
 		if aconst.GetSval() != nil {
-			return Literal{Value: aconst.GetSval().GetSval()}
+			return expr.Literal{Value: aconst.GetSval().GetSval()}
 		} else if aconst.GetBoolval() != nil {
-			return Literal{Value: aconst.GetBoolval().GetBoolval()}
+			return expr.Literal{Value: aconst.GetBoolval().GetBoolval()}
 		} else if aconst.GetIval() != nil {
-			return Literal{Value: aconst.GetIval().GetIval()}
+			return expr.Literal{Value: aconst.GetIval().GetIval()}
 		} else if aconst.GetFval() != nil {
-			return Literal{Value: aconst.GetFval().GetFval()}
+			return expr.Literal{Value: aconst.GetFval().GetFval()}
 		}
 	} else if node.GetAExpr() != nil {
 		switch node.GetAExpr().GetKind() {
@@ -75,7 +78,7 @@ func ToExpression(node *pg_query.Node) Expression {
 			pg_query.A_Expr_Kind_AEXPR_ILIKE,
 			pg_query.A_Expr_Kind_AEXPR_OP_ALL,
 			pg_query.A_Expr_Kind_AEXPR_OP_ANY:
-			return NewBinaryOperator(
+			return expr.NewBinaryOperator(
 				node.GetAExpr().GetName()[0].GetString_().GetSval(),
 				ToExpression(node.GetAExpr().GetLexpr()),
 				ToExpression(node.GetAExpr().GetRexpr()),

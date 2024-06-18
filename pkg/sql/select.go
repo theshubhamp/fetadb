@@ -1,10 +1,12 @@
 package sql
 
+import "fetadb/pkg/sql/expr"
+
 type Select struct {
 	Targets []Target
 	From    []From
-	Where   Expression
-	Having  Expression
+	Where   expr.Expression
+	Having  expr.Expression
 }
 
 type From struct {
@@ -16,5 +18,5 @@ type From struct {
 
 type Target struct {
 	Name  string
-	Value Expression
+	Value expr.Expression
 }
