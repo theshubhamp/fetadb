@@ -2,15 +2,26 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 	pgx "github.com/jackc/pgx/v5/pgproto3"
-	"strconv"
 )
 
 func ToRowDescription(dataframe DataFrame) *pgx.RowDescription {
 	fields := []pgx.FieldDescription{}
+
+	columnId := 0
 	for _, column := range dataframe {
+		columnName := ""
+		if column.Name != "" {
+			columnName = column.Name
+		}
+		if columnName == "" {
+			columnName = fmt.Sprintf("res%v", columnId)
+			columnId++
+		}
+
 		fields = append(fields, pgx.FieldDescription{
-			Name: []byte(strconv.FormatUint(column.ID, 10)),
+			Name: []byte(columnName),
 		})
 	}
 

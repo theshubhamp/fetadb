@@ -32,6 +32,7 @@ func (r Result) Do() (util.DataFrame, error) {
 		for _, target := range r.Targets {
 			result = append(result, util.Column{
 				ID:    0,
+				Name:  target.Name,
 				Items: []any{target.Value.Evaluate(nil)},
 			})
 		}
