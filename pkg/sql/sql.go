@@ -2,6 +2,7 @@ package sql
 
 import (
 	"fetadb/pkg/sql/expr"
+	"fetadb/pkg/util"
 	pg_query "github.com/pganalyze/pg_query_go/v5"
 )
 
@@ -19,6 +20,8 @@ func ToStatements(parseResult *pg_query.ParseResult) []Statement {
 func ToStatement(stmt *pg_query.RawStmt) Statement {
 	if stmt.Stmt.GetSelectStmt() != nil {
 		return ToSelect(stmt.Stmt.GetSelectStmt())
+	} else if stmt.Stmt.GetCreateStmt() != nil {
+		return ToCreate(stmt.Stmt.GetCreateStmt())
 	}
 
 	return nil
@@ -87,4 +90,29 @@ func ToExpression(node *pg_query.Node) expr.Expression {
 	}
 
 	return nil
+}
+
+func ToCreate(createStatement *pg_query.CreateStmt) Create {
+	table := Table{
+		Catalog: createStatement.GetRelation().GetCatalogname(),
+		Schema:  createStatement.GetRelation().GetSchemaname(),
+		Rel:     createStatement.GetRelation().GetRelname(),
+		Alias:   createStatement.GetRelation().GetAlias().GetAliasname(),
+	}
+
+	columnDefs := []ColumnDef{}
+	for _, tableElts := range createStatement.GetTableElts() {
+		columnDef := tableElts.GetColumnDef()
+
+		columnDefs = append(columnDefs, ColumnDef{
+			Name:    columnDef.GetColname(),
+			Type:    util.LookupKind(columnDef.GetTypeName().GetNames()[0].GetString_().GetSval()),
+			NotNull: columnDef.GetIsNotNull(),
+		})
+	}
+
+	return Create{
+		Table:   table,
+		Columns: columnDefs,
+	}
 }

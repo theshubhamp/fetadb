@@ -1,4 +1,4 @@
-package schema
+package dd
 
 import "reflect"
 
@@ -9,7 +9,8 @@ type Table struct {
 }
 
 type Column struct {
-	ID   uint64
-	Name string
-	Type reflect.Kind
+	ID      uint64
+	Name    string
+	Type    reflect.Kind
+	NonNull bool
 }

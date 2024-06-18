@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fetadb/pkg/dd"
 	"fetadb/pkg/plan"
 	"fetadb/pkg/sql"
 	"fetadb/pkg/util"
 	"flag"
+	"github.com/dgraph-io/badger/v4"
 	pgx "github.com/jackc/pgx/v5/pgproto3"
 	pgquery "github.com/pganalyze/pg_query_go/v5"
 	"log"
@@ -24,16 +26,23 @@ func main() {
 	}
 	defer listener.Close()
 
+	opt := badger.DefaultOptions("").WithInMemory(true)
+	db, err := badger.Open(opt)
+	if err != nil {
+		log.Fatalf("failed to open db: %v", err)
+		return
+	}
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			log.Fatalf("failed to accept connection: %v", err)
 		}
-		go handleIncomingConnection(conn)
+		go handleIncomingConnection(db, conn)
 	}
 }
 
-func handleIncomingConnection(conn net.Conn) {
+func handleIncomingConnection(db *badger.DB, conn net.Conn) {
 	backend := pgx.NewBackend(conn, conn)
 
 	msg, err := backend.ReceiveStartupMessage()
@@ -83,7 +92,7 @@ func handleIncomingConnection(conn net.Conn) {
 		}
 
 		log.Printf("received message from connection: %T(%v)", msg, msg)
-		err = handleMessage(backend, msg)
+		err = handleMessage(db, backend, msg)
 		if err != nil {
 			log.Printf("failed to handle message: %v", err)
 			return
@@ -91,7 +100,7 @@ func handleIncomingConnection(conn net.Conn) {
 	}
 }
 
-func handleMessage(backend *pgx.Backend, msg pgx.FrontendMessage) error {
+func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage) error {
 	switch msg := msg.(type) {
 	case *pgx.Query:
 		log.Printf("query: %v", msg.String)
@@ -112,6 +121,13 @@ func handleMessage(backend *pgx.Backend, msg pgx.FrontendMessage) error {
 			backend.Send(util.ToRowDescription(result))
 			for _, row := range util.ToDataRows(result) {
 				backend.Send(&row)
+			}
+		} else if createStatement, ok := statement.(sql.Create); ok {
+			err = dd.CreateTable(db, createStatement)
+			if err != nil {
+				backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+			} else {
+				backend.Send(util.ToRowDescription(util.DataFrame{}))
 			}
 		}
 
