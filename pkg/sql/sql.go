@@ -120,7 +120,7 @@ func ToExpression(node *pg_query.Node) (expr.Expression, error) {
 }
 
 func ToCreate(createStatement *pg_query.CreateStmt) (Create, error) {
-	table := Table{
+	table := TableDef{
 		Catalog: createStatement.GetRelation().GetCatalogname(),
 		Schema:  createStatement.GetRelation().GetSchemaname(),
 		Rel:     createStatement.GetRelation().GetRelname(),

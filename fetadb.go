@@ -128,7 +128,7 @@ func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage)
 					}
 				}
 			} else if createStatement, ok := statement.(sql.Create); ok {
-				err = dd.CreateTable(db, createStatement)
+				err = sql.CreateTable(db, createStatement)
 				if err != nil {
 					backend.Send(&pgx.ErrorResponse{Message: err.Error()})
 				} else {

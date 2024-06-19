@@ -1,7 +1,6 @@
-package dd
+package sql
 
 import (
-	"fetadb/pkg/sql"
 	"github.com/dgraph-io/badger/v4"
 	"reflect"
 	"testing"
@@ -15,11 +14,11 @@ func TestCreateTable(t *testing.T) {
 		return
 	}
 
-	err = CreateTable(db, sql.Create{
-		Table: sql.Table{
+	err = CreateTable(db, Create{
+		Table: TableDef{
 			Rel: "test",
 		},
-		Columns: []sql.ColumnDef{
+		Columns: []ColumnDef{
 			{
 				Name:    "test",
 				Type:    reflect.String,
@@ -50,11 +49,11 @@ func TestGetTable(t *testing.T) {
 		return
 	}
 
-	err = CreateTable(db, sql.Create{
-		Table: sql.Table{
+	err = CreateTable(db, Create{
+		Table: TableDef{
 			Rel: "test",
 		},
-		Columns: []sql.ColumnDef{
+		Columns: []ColumnDef{
 			{
 				Name:    "test",
 				Type:    reflect.String,
