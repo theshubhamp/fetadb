@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fetadb/pkg/dd"
 	"fetadb/pkg/plan"
 	"fetadb/pkg/sql"
 	"fetadb/pkg/util"
@@ -108,37 +107,41 @@ func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage)
 		if err != nil {
 			err := fmt.Errorf("cannot parse: %v", err)
 			backend.Send(&pgx.ErrorResponse{Message: err.Error()})
-		}
-
-		statements, err := sql.ToStatements(parseResult)
-		if err != nil {
-			err := fmt.Errorf("cannot convert pasre tree to ast: %v", err)
-			backend.Send(&pgx.ErrorResponse{Message: err.Error()})
 		} else {
-			statement := statements[0]
-			if selectStatement, ok := statement.(sql.Select); ok {
-				planNode := plan.Select(selectStatement)
-				result, err := planNode.Do()
-				if err != nil {
-					backend.Send(&pgx.ErrorResponse{Message: err.Error()})
-				} else {
-					backend.Send(util.ToRowDescription(result))
-					for _, row := range util.ToDataRows(result) {
-						backend.Send(&row)
+			statements, err := sql.ToStatements(parseResult)
+			if err != nil {
+				err := fmt.Errorf("cannot convert pasre tree to ast: %v", err)
+				backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+			} else {
+				statement := statements[0]
+				if selectStatement, ok := statement.(sql.Select); ok {
+					planNode := plan.Select(selectStatement)
+					result, err := planNode.Do()
+					if err != nil {
+						backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+					} else {
+						backend.Send(util.ToRowDescription(result))
+						for _, row := range util.ToDataRows(result) {
+							backend.Send(&row)
+						}
 					}
-				}
-			} else if createStatement, ok := statement.(sql.Create); ok {
-				err = sql.CreateTable(db, createStatement)
-				if err != nil {
-					backend.Send(&pgx.ErrorResponse{Message: err.Error()})
-				} else {
-					backend.Send(util.ToRowDescription(util.DataFrame{}))
+				} else if createStatement, ok := statement.(sql.Create); ok {
+					err := sql.CreateTable(db, createStatement)
+					if err != nil {
+						backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+					} else {
+						backend.Send(util.ToRowDescription(util.DataFrame{}))
+					}
+				} else if insertStatement, ok := statement.(sql.Insert); ok {
+					err := sql.InsertTable(db, insertStatement)
+					if err != nil {
+						backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+					}
 				}
 			}
 		}
 
 		backend.Send(&pgx.CommandComplete{})
 		backend.Send(&pgx.ReadyForQuery{TxStatus: 'I'})
-		break
 	}
 }

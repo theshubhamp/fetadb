@@ -1,8 +1,11 @@
 package encoding
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
 const (
+	null = iota
 	ui16 = iota
 	ui32 = iota
 	ui64 = iota
@@ -13,6 +16,10 @@ const (
 )
 
 func Encode(e any) []byte {
+	if e == nil {
+		return []byte{null}
+	}
+
 	switch t := e.(type) {
 	case uint16:
 		return binary.BigEndian.AppendUint16([]byte{ui16}, t)
@@ -35,6 +42,8 @@ func Encode(e any) []byte {
 
 func Decode(value []byte) any {
 	switch value[0] {
+	case null:
+		return nil
 	case ui16:
 		return binary.BigEndian.Uint16(value[1:])
 	case ui32:

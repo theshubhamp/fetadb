@@ -21,8 +21,8 @@ func (k Key) IndexID(indexID uint64) Key {
 	return binary.BigEndian.AppendUint64(k, indexID)
 }
 
-func (k Key) IndexValue(indexID uint64) Key {
-	return binary.BigEndian.AppendUint64(k, indexID)
+func (k Key) IndexValue(indexValue uint64) Key {
+	return binary.BigEndian.AppendUint64(k, indexValue)
 }
 
 func (k Key) ColumnID(columnID uint64) Key {

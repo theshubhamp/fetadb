@@ -26,6 +26,7 @@ type TableDef struct {
 type ColumnDef struct {
 	Name    string
 	Type    reflect.Kind
+	Primary bool
 	NotNull bool
 }
 
@@ -44,6 +45,7 @@ func CreateTable(db *badger.DB, create Create) error {
 			ID:      uint64(columnId),
 			Name:    columnDef.Name,
 			Type:    columnDef.Type,
+			Primary: columnDef.Primary,
 			NonNull: columnDef.NotNull,
 		})
 		columnId++
