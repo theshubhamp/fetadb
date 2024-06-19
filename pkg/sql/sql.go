@@ -3,36 +3,47 @@ package sql
 import (
 	"fetadb/pkg/sql/expr"
 	"fetadb/pkg/util"
+	"fmt"
 	pg_query "github.com/pganalyze/pg_query_go/v5"
+	"reflect"
 )
 
-func ToStatements(parseResult *pg_query.ParseResult) []Statement {
+func ToStatements(parseResult *pg_query.ParseResult) ([]Statement, error) {
 	statements := []Statement{}
 	for _, stmt := range parseResult.GetStmts() {
-		result := ToStatement(stmt)
+		result, err := ToStatement(stmt)
+		if err != nil {
+			return nil, err
+		}
+
 		if result != nil {
 			statements = append(statements, result)
 		}
 	}
-	return statements
+	return statements, nil
 }
 
-func ToStatement(stmt *pg_query.RawStmt) Statement {
+func ToStatement(stmt *pg_query.RawStmt) (Statement, error) {
 	if stmt.Stmt.GetSelectStmt() != nil {
 		return ToSelect(stmt.Stmt.GetSelectStmt())
 	} else if stmt.Stmt.GetCreateStmt() != nil {
 		return ToCreate(stmt.Stmt.GetCreateStmt())
 	}
 
-	return nil
+	return nil, fmt.Errorf("unsupported statement type: %v", reflect.TypeOf(stmt.Stmt.GetNode()))
 }
 
-func ToSelect(selectStmt *pg_query.SelectStmt) Select {
+func ToSelect(selectStmt *pg_query.SelectStmt) (Select, error) {
 	targets := []Target{}
 	for _, targetItem := range selectStmt.GetTargetList() {
+		targetExpr, err := ToExpression(targetItem.GetResTarget().GetVal())
+		if err != nil {
+			return Select{}, err
+		}
+
 		target := Target{
 			Name:  targetItem.GetResTarget().GetName(),
-			Value: ToExpression(targetItem.GetResTarget().GetVal()),
+			Value: targetExpr,
 		}
 		targets = append(targets, target)
 	}
@@ -49,30 +60,39 @@ func ToSelect(selectStmt *pg_query.SelectStmt) Select {
 		froms = append(froms, from)
 	}
 
+	var where expr.Expression = nil
+	if selectStmt.GetWhereClause() != nil {
+		whereExpr, err := ToExpression(selectStmt.GetWhereClause())
+		if err != nil {
+			return Select{}, err
+		}
+		where = whereExpr
+	}
+
 	return Select{
 		Targets: targets,
 		From:    froms,
-		Where:   ToExpression(selectStmt.GetWhereClause()),
-	}
+		Where:   where,
+	}, nil
 }
 
-func ToExpression(node *pg_query.Node) expr.Expression {
+func ToExpression(node *pg_query.Node) (expr.Expression, error) {
 	if node.GetColumnRef() != nil {
 		refs := []string{}
 		for _, field := range node.GetColumnRef().Fields {
 			refs = append(refs, field.GetString_().GetSval())
 		}
-		return expr.ColumnRef{Names: refs}
+		return expr.ColumnRef{Names: refs}, nil
 	} else if node.GetAConst() != nil {
 		aconst := node.GetAConst()
 		if aconst.GetSval() != nil {
-			return expr.Literal{Value: aconst.GetSval().GetSval()}
+			return expr.Literal{Value: aconst.GetSval().GetSval()}, nil
 		} else if aconst.GetBoolval() != nil {
-			return expr.Literal{Value: aconst.GetBoolval().GetBoolval()}
+			return expr.Literal{Value: aconst.GetBoolval().GetBoolval()}, nil
 		} else if aconst.GetIval() != nil {
-			return expr.Literal{Value: aconst.GetIval().GetIval()}
+			return expr.Literal{Value: aconst.GetIval().GetIval()}, nil
 		} else if aconst.GetFval() != nil {
-			return expr.Literal{Value: aconst.GetFval().GetFval()}
+			return expr.Literal{Value: aconst.GetFval().GetFval()}, nil
 		}
 	} else if node.GetAExpr() != nil {
 		switch node.GetAExpr().GetKind() {
@@ -81,18 +101,25 @@ func ToExpression(node *pg_query.Node) expr.Expression {
 			pg_query.A_Expr_Kind_AEXPR_ILIKE,
 			pg_query.A_Expr_Kind_AEXPR_OP_ALL,
 			pg_query.A_Expr_Kind_AEXPR_OP_ANY:
-			return expr.NewBinaryOperator(
-				node.GetAExpr().GetName()[0].GetString_().GetSval(),
-				ToExpression(node.GetAExpr().GetLexpr()),
-				ToExpression(node.GetAExpr().GetRexpr()),
-			)
+			operator := node.GetAExpr().GetName()[0].GetString_().GetSval()
+
+			leftExpr, err := ToExpression(node.GetAExpr().GetLexpr())
+			if err != nil {
+				return nil, err
+			}
+			rightExpr, err := ToExpression(node.GetAExpr().GetRexpr())
+			if err != nil {
+				return nil, err
+			}
+
+			return expr.NewBinaryOperator(operator, leftExpr, rightExpr), nil
 		}
 	}
 
-	return nil
+	return nil, fmt.Errorf("unspported node: %v", reflect.TypeOf(node.GetNode()))
 }
 
-func ToCreate(createStatement *pg_query.CreateStmt) Create {
+func ToCreate(createStatement *pg_query.CreateStmt) (Create, error) {
 	table := Table{
 		Catalog: createStatement.GetRelation().GetCatalogname(),
 		Schema:  createStatement.GetRelation().GetSchemaname(),
@@ -104,9 +131,14 @@ func ToCreate(createStatement *pg_query.CreateStmt) Create {
 	for _, tableElts := range createStatement.GetTableElts() {
 		columnDef := tableElts.GetColumnDef()
 
+		columnKind, err := util.LookupKind(columnDef.GetTypeName().GetNames()[0].GetString_().GetSval())
+		if err != nil {
+			return Create{}, err
+		}
+
 		columnDefs = append(columnDefs, ColumnDef{
 			Name:    columnDef.GetColname(),
-			Type:    util.LookupKind(columnDef.GetTypeName().GetNames()[0].GetString_().GetSval()),
+			Type:    columnKind,
 			NotNull: columnDef.GetIsNotNull(),
 		})
 	}
@@ -114,5 +146,5 @@ func ToCreate(createStatement *pg_query.CreateStmt) Create {
 	return Create{
 		Table:   table,
 		Columns: columnDefs,
-	}
+	}, nil
 }

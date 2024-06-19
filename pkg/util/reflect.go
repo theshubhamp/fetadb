@@ -1,7 +1,7 @@
 package util
 
 import (
-	"log"
+	"fmt"
 	"reflect"
 )
 
@@ -22,11 +22,11 @@ var typeStrKindMap = map[string]reflect.Kind{
 	"string":  reflect.String,
 }
 
-func LookupKind(typeStr string) reflect.Kind {
+func LookupKind(typeStr string) (reflect.Kind, error) {
 	kind, ok := typeStrKindMap[typeStr]
 	if !ok {
-		log.Panicf("unsupported type %v", typeStr)
+		return 0, fmt.Errorf("unsupported type %v", typeStr)
 	}
 
-	return kind
+	return kind, nil
 }

@@ -6,6 +6,7 @@ import (
 	"fetadb/pkg/sql"
 	"fetadb/pkg/util"
 	"flag"
+	"fmt"
 	"github.com/dgraph-io/badger/v4"
 	pgx "github.com/jackc/pgx/v5/pgproto3"
 	pgquery "github.com/pganalyze/pg_query_go/v5"
@@ -92,42 +93,47 @@ func handleIncomingConnection(db *badger.DB, conn net.Conn) {
 		}
 
 		log.Printf("received message from connection: %T(%v)", msg, msg)
-		err = handleMessage(db, backend, msg)
-		if err != nil {
-			log.Printf("failed to handle message: %v", err)
-			return
-		}
+		handleMessage(db, backend, msg)
 	}
 }
 
-func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage) error {
+func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage) {
+	defer backend.Flush()
+
 	switch msg := msg.(type) {
 	case *pgx.Query:
 		log.Printf("query: %v", msg.String)
 
 		parseResult, err := pgquery.Parse(msg.String)
 		if err != nil {
-			return err
+			err := fmt.Errorf("cannot parse: %v", err)
+			backend.Send(&pgx.ErrorResponse{Message: err.Error()})
 		}
 
-		statements := sql.ToStatements(parseResult)
-		statement := statements[0]
-
-		if selectStatement, ok := statement.(sql.Select); ok {
-			planNode := plan.Select(selectStatement)
-
-			result, _ := planNode.Do()
-
-			backend.Send(util.ToRowDescription(result))
-			for _, row := range util.ToDataRows(result) {
-				backend.Send(&row)
-			}
-		} else if createStatement, ok := statement.(sql.Create); ok {
-			err = dd.CreateTable(db, createStatement)
-			if err != nil {
-				backend.Send(&pgx.ErrorResponse{Message: err.Error()})
-			} else {
-				backend.Send(util.ToRowDescription(util.DataFrame{}))
+		statements, err := sql.ToStatements(parseResult)
+		if err != nil {
+			err := fmt.Errorf("cannot convert pasre tree to ast: %v", err)
+			backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+		} else {
+			statement := statements[0]
+			if selectStatement, ok := statement.(sql.Select); ok {
+				planNode := plan.Select(selectStatement)
+				result, err := planNode.Do()
+				if err != nil {
+					backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+				} else {
+					backend.Send(util.ToRowDescription(result))
+					for _, row := range util.ToDataRows(result) {
+						backend.Send(&row)
+					}
+				}
+			} else if createStatement, ok := statement.(sql.Create); ok {
+				err = dd.CreateTable(db, createStatement)
+				if err != nil {
+					backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+				} else {
+					backend.Send(util.ToRowDescription(util.DataFrame{}))
+				}
 			}
 		}
 
@@ -135,7 +141,4 @@ func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage)
 		backend.Send(&pgx.ReadyForQuery{TxStatus: 'I'})
 		break
 	}
-
-	backend.Flush()
-	return nil
 }
