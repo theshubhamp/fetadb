@@ -1,9 +1,9 @@
 package sql
 
 import (
-	"fetadb/pkg/dd"
 	"fetadb/pkg/kv"
 	"fetadb/pkg/kv/encoding"
+	"fetadb/pkg/sql/dd"
 	"fetadb/pkg/sql/expr"
 	"fetadb/pkg/util"
 	"fmt"
