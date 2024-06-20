@@ -71,12 +71,12 @@ func InsertTable(db *badger.DB, insert Insert) error {
 			}
 			indexValue := evaluatedIndexValue.Convert(reflect.TypeOf(uint64(1))).Uint()
 
-			if !prefixEmpty(txn, kv.NewKey().TableID(table.ID).IndexID(util.DefaultIndex).IndexValue(indexValue)) {
+			if !prefixEmpty(txn, kv.NewDKey().TableID(table.ID).IndexID(util.DefaultIndex).IndexValue(indexValue)) {
 				return fmt.Errorf("duplicate index value %v", indexValue)
 			}
 
 			for colIdx, requestedColumn := range insert.Column {
-				key := kv.NewKey().TableID(table.ID).IndexID(util.DefaultIndex).IndexValue(indexValue).ColumnID(columns[requestedColumn.Name].ID)
+				key := kv.NewDKey().TableID(table.ID).IndexID(util.DefaultIndex).IndexValue(indexValue).ColumnID(columns[requestedColumn.Name].ID)
 
 				encoded, err := encoding.Encode(row[colIdx].Evaluate(nil))
 				if err != nil {
@@ -95,7 +95,7 @@ func InsertTable(db *badger.DB, insert Insert) error {
 				}
 
 				if !valueAvailable {
-					key := kv.NewKey().TableID(table.ID).IndexID(util.DefaultIndex).IndexValue(indexValue).ColumnID(columns[columnName].ID)
+					key := kv.NewDKey().TableID(table.ID).IndexID(util.DefaultIndex).IndexValue(indexValue).ColumnID(columns[columnName].ID)
 
 					encoded, err := encoding.Encode(nil)
 					if err != nil {

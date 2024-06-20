@@ -33,10 +33,10 @@ func (s SeqScan) Do(db *badger.DB) (util.DataFrame, error) {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
 
-		prefix := kv.NewKey().TableID(table.ID).IndexID(util.DefaultIndex)
+		prefix := kv.NewDKey().TableID(table.ID).IndexID(util.DefaultIndex)
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
-			_, _, _, columnID := kv.Key(item.Key()).Decode()
+			_, _, _, columnID := kv.DKey(item.Key()).Decode()
 
 			column, ok := columns[columnID]
 			if !ok {
