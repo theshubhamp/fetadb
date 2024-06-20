@@ -25,3 +25,13 @@ func (t Table) GetColumnByName(name string) (Column, bool) {
 
 	return Column{}, false
 }
+
+func (t Table) GetColumnByID(id uint64) (Column, bool) {
+	for _, column := range t.Columns {
+		if column.ID == id {
+			return column, true
+		}
+	}
+
+	return Column{}, false
+}

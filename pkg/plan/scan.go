@@ -3,36 +3,44 @@ package plan
 import (
 	"fetadb/pkg/kv"
 	"fetadb/pkg/kv/encoding"
+	"fetadb/pkg/sql"
 	"fetadb/pkg/util"
 	"fmt"
 	"github.com/dgraph-io/badger/v4"
 )
 
 type SeqScan struct {
-	DB      *badger.DB
-	TableID uint64
+	TableName string
 }
 
-func (s SeqScan) Do() (util.DataFrame, error) {
+func (s SeqScan) Do(db *badger.DB) (util.DataFrame, error) {
+	table, err := sql.GetTableByName(db, s.TableName)
+	if err != nil {
+		return util.DataFrame{}, err
+	}
+
+	columns := map[uint64]*util.Column{}
+	for _, column := range table.Columns {
+		columns[column.ID] = &util.Column{
+			ID:    column.ID,
+			Name:  column.Name,
+			Items: []any{},
+		}
+	}
+
 	results := util.DataFrame{}
-	return results, s.DB.View(func(txn *badger.Txn) error {
+	return results, db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
 
-		columns := map[uint64]*util.Column{}
-
-		prefix := kv.NewKey().TableID(s.TableID).IndexID(util.DefaultIndex)
+		prefix := kv.NewKey().TableID(table.ID).IndexID(util.DefaultIndex)
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
 			_, _, _, columnID := kv.Key(item.Key()).Decode()
 
 			column, ok := columns[columnID]
 			if !ok {
-				column = &util.Column{
-					ID:    columnID,
-					Items: []any{},
-				}
-				columns[columnID] = column
+				return fmt.Errorf("column with id %v not found in table %v", columnID, table.Name)
 			}
 
 			err := item.Value(func(val []byte) error {

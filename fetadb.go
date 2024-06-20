@@ -116,7 +116,7 @@ func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage)
 				statement := statements[0]
 				if selectStatement, ok := statement.(sql.Select); ok {
 					planNode := plan.Select(selectStatement)
-					result, err := planNode.Do()
+					result, err := planNode.Do(db)
 					if err != nil {
 						backend.Send(&pgx.ErrorResponse{Message: err.Error()})
 					} else {

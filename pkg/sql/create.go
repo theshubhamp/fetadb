@@ -62,7 +62,12 @@ func CreateTable(db *badger.DB, create Create) error {
 	}
 
 	return db.Update(func(txn *badger.Txn) error {
-		err := txn.Set([]byte(create.Table.Rel), encoding.Encode(tableId))
+		encoded, err := encoding.Encode(tableId)
+		if err != nil {
+			return err
+		}
+
+		err = txn.Set([]byte(create.Table.Rel), encoded)
 		if err != nil {
 			return err
 		}

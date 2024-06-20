@@ -77,7 +77,13 @@ func InsertTable(db *badger.DB, insert Insert) error {
 
 			for colIdx, requestedColumn := range insert.Column {
 				key := kv.NewKey().TableID(table.ID).IndexID(util.DefaultIndex).IndexValue(indexValue).ColumnID(columns[requestedColumn.Name].ID)
-				err := txn.Set(key, encoding.Encode(row[colIdx].Evaluate(nil)))
+
+				encoded, err := encoding.Encode(row[colIdx].Evaluate(nil))
+				if err != nil {
+					return err
+				}
+
+				err = txn.Set(key, encoded)
 				if err != nil {
 					return err
 				}
@@ -90,7 +96,13 @@ func InsertTable(db *badger.DB, insert Insert) error {
 
 				if !valueAvailable {
 					key := kv.NewKey().TableID(table.ID).IndexID(util.DefaultIndex).IndexValue(indexValue).ColumnID(columns[columnName].ID)
-					err := txn.Set(key, encoding.Encode(nil))
+
+					encoded, err := encoding.Encode(nil)
+					if err != nil {
+						return err
+					}
+
+					err = txn.Set(key, encoded)
 					if err != nil {
 						return err
 					}
