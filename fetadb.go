@@ -15,18 +15,29 @@ import (
 
 var options struct {
 	listenAddress string
+	dbPath        string
 }
 
 func main() {
 	flag.StringVar(&options.listenAddress, "listen", "127.0.0.1:5432", "Listen address")
+	flag.StringVar(&options.dbPath, "dbpath", "memory", "Path to store DB, use 'memory' for non persistent mode")
+	flag.Parse()
 
 	listener, err := net.Listen("tcp", options.listenAddress)
 	if err != nil {
 		log.Fatalf("failed to setup listener: %v", err)
 	}
 	defer listener.Close()
+	log.Printf("listening on %v", options.listenAddress)
 
-	opt := badger.DefaultOptions("").WithInMemory(true)
+	opt := badger.DefaultOptions("")
+	if options.dbPath == "memory" {
+		opt = opt.WithInMemory(true)
+	} else {
+		opt = opt.WithDir(options.dbPath).WithValueDir(options.dbPath)
+	}
+	log.Printf("db backed with %v", options.dbPath)
+
 	db, err := badger.Open(opt)
 	if err != nil {
 		log.Fatalf("failed to open db: %v", err)
