@@ -3,7 +3,7 @@ package plan
 import (
 	"fetadb/pkg/kv"
 	"fetadb/pkg/kv/encoding"
-	"fetadb/pkg/sql"
+	"fetadb/pkg/sql/stmt"
 	"fetadb/pkg/util"
 	"fmt"
 	"github.com/dgraph-io/badger/v4"
@@ -14,7 +14,7 @@ type SeqScan struct {
 }
 
 func (s SeqScan) Do(db *badger.DB) (util.DataFrame, error) {
-	table, err := sql.GetTableByName(db, s.TableName)
+	table, err := stmt.GetTableByName(db, s.TableName)
 	if err != nil {
 		return util.DataFrame{}, err
 	}

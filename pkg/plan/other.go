@@ -1,7 +1,7 @@
 package plan
 
 import (
-	"fetadb/pkg/sql"
+	"fetadb/pkg/sql/stmt"
 	"fetadb/pkg/util"
 	"github.com/dgraph-io/badger/v4"
 )
@@ -21,7 +21,7 @@ func (a Append) Do(db *badger.DB) (util.DataFrame, error) {
 }
 
 type Result struct {
-	Targets []sql.Target
+	Targets []stmt.Target
 	Child   Node
 }
 

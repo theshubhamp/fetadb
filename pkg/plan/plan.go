@@ -1,8 +1,10 @@
 package plan
 
-import "fetadb/pkg/sql"
+import (
+	"fetadb/pkg/sql/stmt"
+)
 
-func Select(selectStatement sql.Select) Node {
+func Select(selectStatement stmt.Select) Node {
 	if len(selectStatement.From) == 0 {
 		return Result{
 			Targets: selectStatement.Targets,

@@ -1,8 +1,8 @@
 package plan
 
 import (
-	"fetadb/pkg/sql"
 	"fetadb/pkg/sql/expr"
+	"fetadb/pkg/sql/stmt"
 	"github.com/dgraph-io/badger/v4"
 	"reflect"
 	"testing"
@@ -18,9 +18,9 @@ func TestSeqScan(t *testing.T) {
 		return
 	}
 
-	err = sql.CreateTable(db, sql.Create{
-		Table: sql.TableDef{Rel: tableName},
-		Columns: []sql.ColumnDef{
+	err = stmt.CreateTable(db, stmt.Create{
+		Table: stmt.TableDef{Rel: tableName},
+		Columns: []stmt.ColumnDef{
 			{Name: "id", Type: reflect.Uint64, NotNull: true, Primary: true},
 			{Name: "letter", Type: reflect.String, NotNull: true, Primary: false},
 		},
@@ -30,9 +30,9 @@ func TestSeqScan(t *testing.T) {
 	}
 
 	for idx, letter := range []string{"A", "B", "C", "D"} {
-		err := sql.InsertTable(db, sql.Insert{
-			Table:  sql.TargetTable{Rel: tableName},
-			Column: []sql.RequestedColumn{{Name: "id"}, {Name: "letter"}},
+		err := stmt.InsertTable(db, stmt.Insert{
+			Table:  stmt.TargetTable{Rel: tableName},
+			Column: []stmt.RequestedColumn{{Name: "id"}, {Name: "letter"}},
 			Values: [][]expr.Expression{{expr.Literal{Value: idx}, expr.Literal{Value: letter}}},
 		})
 		if err != nil {

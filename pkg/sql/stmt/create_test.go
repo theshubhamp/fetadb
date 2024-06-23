@@ -1,4 +1,4 @@
-package sql
+package stmt
 
 import (
 	"github.com/dgraph-io/badger/v4"

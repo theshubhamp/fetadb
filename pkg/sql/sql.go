@@ -2,6 +2,7 @@ package sql
 
 import (
 	"fetadb/pkg/sql/expr"
+	"fetadb/pkg/sql/stmt"
 	"fetadb/pkg/util"
 	"fmt"
 	pg_query "github.com/pganalyze/pg_query_go/v5"
@@ -32,28 +33,28 @@ func ToStatement(stmt *pg_query.RawStmt) (Statement, error) {
 		return ToInsert(stmt.Stmt.GetInsertStmt())
 	}
 
-	return nil, fmt.Errorf("unsupported statement type: %v", reflect.TypeOf(stmt.Stmt.GetNode()))
+	return nil, fmt.Errorf("unsupported stmt type: %v", reflect.TypeOf(stmt.Stmt.GetNode()))
 }
 
-func ToSelect(selectStmt *pg_query.SelectStmt) (Select, error) {
-	targets := []Target{}
+func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
+	targets := []stmt.Target{}
 	for _, targetItem := range selectStmt.GetTargetList() {
 		targetExpr, err := ToExpression(targetItem.GetResTarget().GetVal())
 		if err != nil {
-			return Select{}, err
+			return stmt.Select{}, err
 		}
 
-		target := Target{
+		target := stmt.Target{
 			Name:  targetItem.GetResTarget().GetName(),
 			Value: targetExpr,
 		}
 		targets = append(targets, target)
 	}
 
-	froms := []From{}
+	froms := []stmt.From{}
 	for _, fromClause := range selectStmt.GetFromClause() {
 		rangeVar := fromClause.GetRangeVar()
-		from := From{
+		from := stmt.From{
 			Catalog: rangeVar.GetCatalogname(),
 			Schema:  rangeVar.GetSchemaname(),
 			Rel:     rangeVar.GetRelname(),
@@ -66,12 +67,12 @@ func ToSelect(selectStmt *pg_query.SelectStmt) (Select, error) {
 	if selectStmt.GetWhereClause() != nil {
 		whereExpr, err := ToExpression(selectStmt.GetWhereClause())
 		if err != nil {
-			return Select{}, err
+			return stmt.Select{}, err
 		}
 		where = whereExpr
 	}
 
-	return Select{
+	return stmt.Select{
 		Targets: targets,
 		From:    froms,
 		Where:   where,
@@ -127,23 +128,23 @@ func ToExpression(node *pg_query.Node) (expr.Expression, error) {
 	return nil, fmt.Errorf("unspported node: %v", reflect.TypeOf(node.GetNode()))
 }
 
-func ToCreate(createStatement *pg_query.CreateStmt) (Create, error) {
-	table := TableDef{
+func ToCreate(createStatement *pg_query.CreateStmt) (stmt.Create, error) {
+	table := stmt.TableDef{
 		Catalog: createStatement.GetRelation().GetCatalogname(),
 		Schema:  createStatement.GetRelation().GetSchemaname(),
 		Rel:     createStatement.GetRelation().GetRelname(),
 		Alias:   createStatement.GetRelation().GetAlias().GetAliasname(),
 	}
 
-	columnDefs := []ColumnDef{}
+	columnDefs := []stmt.ColumnDef{}
 	primaryColumn := ""
 	for _, tableElts := range createStatement.GetTableElts() {
 		columnKind, err := util.LookupKind(tableElts.GetColumnDef().GetTypeName().GetNames()[0].GetString_().GetSval())
 		if err != nil {
-			return Create{}, err
+			return stmt.Create{}, err
 		}
 
-		columnDef := ColumnDef{
+		columnDef := stmt.ColumnDef{
 			Name:    tableElts.GetColumnDef().GetColname(),
 			Type:    columnKind,
 			Primary: false,
@@ -159,7 +160,7 @@ func ToCreate(createStatement *pg_query.CreateStmt) (Create, error) {
 					columnDef.NotNull = true
 				case pg_query.ConstrType_CONSTR_PRIMARY:
 					if primaryColumn != "" {
-						return Create{}, fmt.Errorf("duplicate primary key column %v, previous %v", columnDef.Name, primaryColumn)
+						return stmt.Create{}, fmt.Errorf("duplicate primary key column %v, previous %v", columnDef.Name, primaryColumn)
 					}
 					primaryColumn = columnDef.Name
 					columnDef.Primary = true
@@ -171,25 +172,25 @@ func ToCreate(createStatement *pg_query.CreateStmt) (Create, error) {
 		columnDefs = append(columnDefs, columnDef)
 	}
 
-	return Create{
+	return stmt.Create{
 		Table:   table,
 		Columns: columnDefs,
 	}, nil
 }
 
-func ToInsert(insertStatement *pg_query.InsertStmt) (Insert, error) {
-	table := TargetTable{
+func ToInsert(insertStatement *pg_query.InsertStmt) (stmt.Insert, error) {
+	table := stmt.TargetTable{
 		Catalog: insertStatement.GetRelation().GetCatalogname(),
 		Schema:  insertStatement.GetRelation().GetSchemaname(),
 		Rel:     insertStatement.GetRelation().GetRelname(),
 		Alias:   insertStatement.GetRelation().GetAlias().GetAliasname(),
 	}
 
-	requestedColumns := []RequestedColumn{}
+	requestedColumns := []stmt.RequestedColumn{}
 	values := [][]expr.Expression{}
 
 	for _, colNode := range insertStatement.GetCols() {
-		requestedColumns = append(requestedColumns, RequestedColumn{
+		requestedColumns = append(requestedColumns, stmt.RequestedColumn{
 			Name: colNode.GetResTarget().GetName(),
 		})
 	}
@@ -199,14 +200,14 @@ func ToInsert(insertStatement *pg_query.InsertStmt) (Insert, error) {
 		for _, col := range val.GetList().GetItems() {
 			valueExpr, err := ToExpression(col)
 			if err != nil {
-				return Insert{}, err
+				return stmt.Insert{}, err
 			}
 			row = append(row, valueExpr)
 		}
 		values = append(values, row)
 	}
 
-	return Insert{
+	return stmt.Insert{
 		Table:  table,
 		Column: requestedColumns,
 		Values: values,

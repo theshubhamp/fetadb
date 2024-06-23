@@ -3,6 +3,7 @@ package main
 import (
 	"fetadb/pkg/plan"
 	"fetadb/pkg/sql"
+	"fetadb/pkg/sql/stmt"
 	"fetadb/pkg/util"
 	"flag"
 	"fmt"
@@ -125,7 +126,7 @@ func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage)
 				backend.Send(&pgx.ErrorResponse{Message: err.Error()})
 			} else {
 				statement := statements[0]
-				if selectStatement, ok := statement.(sql.Select); ok {
+				if selectStatement, ok := statement.(stmt.Select); ok {
 					planNode := plan.Select(selectStatement)
 					result, err := planNode.Do(db)
 					if err != nil {
@@ -136,15 +137,15 @@ func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage)
 							backend.Send(&row)
 						}
 					}
-				} else if createStatement, ok := statement.(sql.Create); ok {
-					err := sql.CreateTable(db, createStatement)
+				} else if createStatement, ok := statement.(stmt.Create); ok {
+					err := stmt.CreateTable(db, createStatement)
 					if err != nil {
 						backend.Send(&pgx.ErrorResponse{Message: err.Error()})
 					} else {
 						backend.Send(util.ToRowDescription(util.DataFrame{}))
 					}
-				} else if insertStatement, ok := statement.(sql.Insert); ok {
-					err := sql.InsertTable(db, insertStatement)
+				} else if insertStatement, ok := statement.(stmt.Insert); ok {
+					err := stmt.InsertTable(db, insertStatement)
 					if err != nil {
 						backend.Send(&pgx.ErrorResponse{Message: err.Error()})
 					}

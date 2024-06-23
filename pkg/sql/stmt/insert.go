@@ -1,4 +1,4 @@
-package sql
+package stmt
 
 import (
 	"fetadb/pkg/kv"
