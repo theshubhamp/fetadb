@@ -31,10 +31,15 @@ func (r Result) Do(db *badger.DB) (util.DataFrame, error) {
 
 		columnID := uint64(0)
 		for _, target := range r.Targets {
+			evaluated, err := target.Value.Evaluate(nil)
+			if err != nil {
+				return nil, err
+			}
+
 			result = append(result, util.Column{
 				ID:    columnID,
 				Name:  target.Name,
-				Items: []any{target.Value.Evaluate(nil)},
+				Items: []any{evaluated},
 			})
 		}
 
@@ -60,10 +65,11 @@ func (r Result) Do(db *badger.DB) (util.DataFrame, error) {
 
 		for rowIdx := range numRows {
 			for colIdx, _ := range result {
-				evaluated := r.Targets[colIdx].Value.Evaluate(RowEvaluationContext{
-					DF:  childResult,
-					Row: uint64(rowIdx),
-				})
+				evaluated, err := r.Targets[colIdx].Value.Evaluate(RowEvaluationContext{DF: childResult, Row: uint64(rowIdx)})
+				if err != nil {
+					return nil, err
+				}
+
 				result[colIdx].Items = append(result[colIdx].Items, evaluated)
 			}
 		}

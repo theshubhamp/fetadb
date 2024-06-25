@@ -65,11 +65,15 @@ func InsertTable(db *badger.DB, insert Insert) error {
 
 	return db.Update(func(txn *badger.Txn) error {
 		for _, row := range insert.Values {
-			evaluatedIndexValue := reflect.ValueOf(row[primaryColumnValueIndex].Evaluate(nil))
-			if !evaluatedIndexValue.CanConvert(reflect.TypeOf(uint64(1))) {
-				return fmt.Errorf("primary key value expected to be uint64, got %v", evaluatedIndexValue.Kind())
+			evaluatedIndexValue, err := row[primaryColumnValueIndex].Evaluate(nil)
+			if err != nil {
+				return err
 			}
-			indexValue := evaluatedIndexValue.Convert(reflect.TypeOf(uint64(1))).Uint()
+
+			if !reflect.ValueOf(evaluatedIndexValue).CanConvert(reflect.TypeOf(uint64(1))) {
+				return fmt.Errorf("primary key value expected to be uint64, got %v", reflect.ValueOf(evaluatedIndexValue).Kind())
+			}
+			indexValue := reflect.ValueOf(evaluatedIndexValue).Convert(reflect.TypeOf(uint64(1))).Uint()
 
 			if !prefixEmpty(txn, kv.NewDKey().TableID(table.ID).IndexID(util.DefaultIndex).IndexValue(indexValue)) {
 				return fmt.Errorf("duplicate index value %v", indexValue)
@@ -78,7 +82,12 @@ func InsertTable(db *badger.DB, insert Insert) error {
 			for colIdx, requestedColumn := range insert.Column {
 				key := kv.NewDKey().TableID(table.ID).IndexID(util.DefaultIndex).IndexValue(indexValue).ColumnID(columns[requestedColumn.Name].ID)
 
-				encoded, err := encoding.Encode(row[colIdx].Evaluate(nil))
+				evaluated, err := row[colIdx].Evaluate(nil)
+				if err != nil {
+					return err
+				}
+
+				encoded, err := encoding.Encode(evaluated)
 				if err != nil {
 					return err
 				}

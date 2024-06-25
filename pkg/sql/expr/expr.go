@@ -2,26 +2,21 @@ package expr
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 )
 
 type EvaluationContext interface {
-	LookupColumnRef(ref ColumnRef) any
+	LookupColumnRef(ref ColumnRef) (any, error)
 }
 
 type Expression interface {
-	Evaluate(ec EvaluationContext) any
+	Evaluate(ec EvaluationContext) (any, error)
 	String() string
 }
 
 type Equals struct {
 	Left  Expression
 	Right Expression
-}
-
-func (e Equals) Evaluate(ec EvaluationContext) any {
-	return reflect.DeepEqual(e.Left.Evaluate(ec), e.Right.Evaluate(ec))
 }
 
 func (e Equals) String() string {
@@ -32,7 +27,7 @@ type ColumnRef struct {
 	Names []string
 }
 
-func (c ColumnRef) Evaluate(ec EvaluationContext) any {
+func (c ColumnRef) Evaluate(ec EvaluationContext) (any, error) {
 	return ec.LookupColumnRef(c)
 }
 
@@ -44,8 +39,8 @@ type Literal struct {
 	Value any
 }
 
-func (l Literal) Evaluate(ec EvaluationContext) any {
-	return l.Value
+func (l Literal) Evaluate(ec EvaluationContext) (any, error) {
+	return l.Value, nil
 }
 
 func (l Literal) String() string {
