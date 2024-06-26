@@ -1,6 +1,7 @@
 package plan
 
 import (
+	"fetadb/pkg/sql/expr"
 	"fetadb/pkg/sql/stmt"
 	"fetadb/pkg/util"
 	"github.com/dgraph-io/badger/v4"
@@ -55,9 +56,15 @@ func (r Result) Do(db *badger.DB) (util.DataFrame, error) {
 
 		columnID := uint64(0)
 		for _, target := range r.Targets {
+			currentColumnName := target.Name
+
+			if column, ok := target.Value.(expr.ColumnRef); ok && target.Name == "" {
+				currentColumnName = column.Names[len(column.Names)-1]
+			}
+
 			result = append(result, util.Column{
 				ID:    columnID,
-				Name:  target.Name,
+				Name:  currentColumnName,
 				Items: []any{},
 			})
 			columnID++

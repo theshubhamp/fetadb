@@ -7,3 +7,13 @@ type Column struct {
 	Name  string
 	Items []any
 }
+
+func (df *DataFrame) GetColumn(name string) *Column {
+	for _, column := range *df {
+		if column.Name == name {
+			return &column
+		}
+	}
+
+	return nil
+}
