@@ -7,6 +7,7 @@ import (
 	"fmt"
 	pg_query "github.com/pganalyze/pg_query_go/v5"
 	"reflect"
+	"strconv"
 )
 
 func ToStatements(parseResult *pg_query.ParseResult) ([]Statement, error) {
@@ -101,7 +102,8 @@ func ToExpression(node *pg_query.Node) (expr.Expression, error) {
 		} else if aconst.GetIval() != nil {
 			return expr.Literal{Value: aconst.GetIval().GetIval()}, nil
 		} else if aconst.GetFval() != nil {
-			return expr.Literal{Value: aconst.GetFval().GetFval()}, nil
+			parsedFloat, err := strconv.ParseFloat(aconst.GetFval().GetFval(), 64)
+			return expr.Literal{Value: parsedFloat}, err
 		}
 	} else if node.GetAExpr() != nil {
 		switch node.GetAExpr().GetKind() {

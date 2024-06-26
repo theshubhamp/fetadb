@@ -9,6 +9,10 @@ type delegateFunc func(left any, right any) (any, error)
 
 var delegates = map[string]delegateFunc{
 	"=": operatorEq,
+	"+": Add,
+	"-": Subtract,
+	"*": Multiply,
+	"/": Divide,
 }
 
 func NewBinaryOperator(operator string, left Expression, right Expression) BinaryOperator {
