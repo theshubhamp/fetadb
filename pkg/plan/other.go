@@ -4,21 +4,22 @@ import (
 	"fetadb/pkg/sql/expr"
 	"fetadb/pkg/sql/stmt"
 	"fetadb/pkg/util"
+	"fmt"
 	"github.com/dgraph-io/badger/v4"
 )
 
 type Aggregate struct {
 }
 
-func (a Aggregate) Do(db *badger.DB) (util.DataFrame, error) {
-	return util.DataFrame{}, nil
+func (a Aggregate) Do(db *badger.DB) (*util.DataFrame, error) {
+	return nil, fmt.Errorf("not implemented")
 }
 
 type Append struct {
 }
 
-func (a Append) Do(db *badger.DB) (util.DataFrame, error) {
-	return util.DataFrame{}, nil
+func (a Append) Do(db *badger.DB) (*util.DataFrame, error) {
+	return nil, fmt.Errorf("not implemented")
 }
 
 type Result struct {
@@ -26,7 +27,7 @@ type Result struct {
 	Child   Node
 }
 
-func (r Result) Do(db *badger.DB) (util.DataFrame, error) {
+func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 	if r.Child == nil {
 		result := util.DataFrame{}
 
@@ -44,7 +45,7 @@ func (r Result) Do(db *badger.DB) (util.DataFrame, error) {
 			})
 		}
 
-		return result, nil
+		return &result, nil
 	} else {
 		childResult, err := r.Child.Do(db)
 		if err != nil {
@@ -52,7 +53,7 @@ func (r Result) Do(db *badger.DB) (util.DataFrame, error) {
 		}
 
 		result := util.DataFrame{}
-		numRows := len(childResult[0].Items)
+		numRows := len((*childResult)[0].Items)
 
 		columnID := uint64(0)
 		for _, target := range r.Targets {
@@ -81,13 +82,13 @@ func (r Result) Do(db *badger.DB) (util.DataFrame, error) {
 			}
 		}
 
-		return result, nil
+		return &result, nil
 	}
 }
 
 type Sort struct {
 }
 
-func (s Sort) Do(db *badger.DB) (util.DataFrame, error) {
-	return util.DataFrame{}, nil
+func (s Sort) Do(db *badger.DB) (*util.DataFrame, error) {
+	return nil, fmt.Errorf("not implemented")
 }

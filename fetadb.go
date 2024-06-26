@@ -141,8 +141,6 @@ func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage)
 					err := stmt.CreateTable(db, createStatement)
 					if err != nil {
 						backend.Send(&pgx.ErrorResponse{Message: err.Error()})
-					} else {
-						backend.Send(util.ToRowDescription(util.DataFrame{}))
 					}
 				} else if insertStatement, ok := statement.(stmt.Insert); ok {
 					err := stmt.InsertTable(db, insertStatement)

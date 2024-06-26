@@ -13,10 +13,10 @@ type SeqScan struct {
 	TableName string
 }
 
-func (s SeqScan) Do(db *badger.DB) (util.DataFrame, error) {
+func (s SeqScan) Do(db *badger.DB) (*util.DataFrame, error) {
 	table, err := stmt.GetTableByName(db, s.TableName)
 	if err != nil {
-		return util.DataFrame{}, err
+		return nil, err
 	}
 
 	columns := map[uint64]*util.Column{}
@@ -29,7 +29,7 @@ func (s SeqScan) Do(db *badger.DB) (util.DataFrame, error) {
 	}
 
 	results := util.DataFrame{}
-	return results, db.View(func(txn *badger.Txn) error {
+	return &results, db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
 

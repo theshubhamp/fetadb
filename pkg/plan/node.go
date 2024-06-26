@@ -6,5 +6,5 @@ import (
 )
 
 type Node interface {
-	Do(db *badger.DB) (util.DataFrame, error)
+	Do(db *badger.DB) (*util.DataFrame, error)
 }
