@@ -125,6 +125,19 @@ func ToExpression(node *pg_query.Node) (expr.Expression, error) {
 
 			return expr.NewBinaryOperator(operator, leftExpr, rightExpr), nil
 		}
+	} else if node.GetFuncCall() != nil {
+		name := node.GetFuncCall().GetFuncname()[0].GetString_().GetSval()
+		args := []expr.Expression{}
+
+		for _, argNode := range node.GetFuncCall().GetArgs() {
+			arg, err := ToExpression(argNode)
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, arg)
+		}
+
+		return expr.NewFuncCall(name, args)
 	}
 
 	return nil, fmt.Errorf("unspported node: %v", reflect.TypeOf(node.GetNode()))

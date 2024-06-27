@@ -28,6 +28,10 @@ type ColumnRef struct {
 }
 
 func (c ColumnRef) Evaluate(ec EvaluationContext) (any, error) {
+	if ec == nil {
+		return nil, fmt.Errorf("cannot evaluate column ref without evaluation context")
+	}
+
 	return ec.LookupColumnRef(c)
 }
 

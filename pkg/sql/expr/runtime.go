@@ -4,6 +4,7 @@ import (
 	"fetadb/pkg/util"
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 func Add(left any, right any) (any, error) {
@@ -156,4 +157,12 @@ func Divide(left any, right any) (any, error) {
 	}
 
 	return nil, fmt.Errorf("operator / with operands types (%v, %v) not supported", leftValue.Kind(), rightValue.Kind())
+}
+
+func Lower(val string) string {
+	return strings.ToLower(val)
+}
+
+func Upper(val string) string {
+	return strings.ToUpper(val)
 }
