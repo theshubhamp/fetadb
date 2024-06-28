@@ -1,7 +1,9 @@
 package expr
 
 import (
+	"fetadb/pkg/util"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 )
@@ -26,13 +28,29 @@ func NewFuncCall(name string, args []Expression) (FuncCall, error) {
 		return FuncCall{}, fmt.Errorf("function %v requires %v args, got %v", name, delegate.Type().NumIn(), len(args))
 	}
 
-	return FuncCall{Name: name, delegate: delegate, Args: args}, nil
+	if delegate.Type().NumOut() == 0 {
+		return FuncCall{}, fmt.Errorf("function %v requires at least 1 return, got 0", name)
+	}
+
+	resultOut := -1
+	errorOut := -1
+	for idx := range delegate.Type().NumOut() {
+		if util.IsError(delegate.Type().Out(idx)) {
+			errorOut = idx
+		} else {
+			resultOut = int(math.Max(float64(resultOut), float64(idx)))
+		}
+	}
+
+	return FuncCall{Name: name, delegate: delegate, resultOut: resultOut, errorOut: errorOut, Args: args}, nil
 }
 
 type FuncCall struct {
-	Name     string
-	delegate reflect.Value
-	Args     []Expression
+	Name      string
+	delegate  reflect.Value
+	resultOut int
+	errorOut  int
+	Args      []Expression
 }
 
 func (f FuncCall) Evaluate(ec EvaluationContext) (any, error) {
@@ -47,7 +65,21 @@ func (f FuncCall) Evaluate(ec EvaluationContext) (any, error) {
 		evaluatedArgs = append(evaluatedArgs, reflect.ValueOf(evaluatedArg))
 	}
 
-	return f.delegate.Call(evaluatedArgs)[0].Interface(), nil
+	returns := f.delegate.Call(evaluatedArgs)
+	var val any = nil
+	var err error = nil
+
+	if f.resultOut >= 0 {
+		val = returns[f.resultOut].Interface()
+	}
+	if f.errorOut >= 0 {
+		errRet := returns[f.errorOut].Interface()
+		if errRet != nil {
+			err = errRet.(error)
+		}
+	}
+
+	return val, err
 }
 
 func (f FuncCall) String() string {
