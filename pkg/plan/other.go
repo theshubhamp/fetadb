@@ -1,7 +1,6 @@
 package plan
 
 import (
-	"fetadb/pkg/sql/expr"
 	"fetadb/pkg/sql/stmt"
 	"fetadb/pkg/util"
 	"fmt"
@@ -40,7 +39,7 @@ func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 
 			result = append(result, util.Column{
 				ID:    columnID,
-				Name:  target.Name,
+				Name:  target.Value.String(),
 				Items: []any{evaluated},
 			})
 		}
@@ -58,9 +57,8 @@ func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 		columnID := uint64(0)
 		for _, target := range r.Targets {
 			currentColumnName := target.Name
-
-			if column, ok := target.Value.(expr.ColumnRef); ok && target.Name == "" {
-				currentColumnName = column.Names[len(column.Names)-1]
+			if target.Name == "" {
+				currentColumnName = target.Value.String()
 			}
 
 			result = append(result, util.Column{
