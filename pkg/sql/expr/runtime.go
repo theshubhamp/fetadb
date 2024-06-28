@@ -3,8 +3,13 @@ package expr
 import (
 	"fetadb/pkg/util"
 	"fmt"
+	"reflect"
 	"strings"
 )
+
+func Eq(left any, right any) (any, error) {
+	return reflect.DeepEqual(left, right), nil
+}
 
 func Add(left any, right any) (any, error) {
 	leftValue, leftOk := util.NewNumber(left)

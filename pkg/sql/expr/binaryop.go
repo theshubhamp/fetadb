@@ -1,55 +1,32 @@
 package expr
 
-import (
-	"fmt"
-	"reflect"
-)
+import "fmt"
 
-type delegateFunc func(left any, right any) (any, error)
-
-var delegates = map[string]delegateFunc{
-	"=": operatorEq,
-	"+": Add,
-	"-": Subtract,
-	"*": Multiply,
-	"/": Divide,
-}
-
-func NewBinaryOperator(operator string, left Expression, right Expression) BinaryOperator {
-	f, _ := delegates[operator]
+func NewBinaryOperator(operator string, left Expression, right Expression) (BinaryOperator, error) {
+	delegate, err := NewFuncCall(operator, []Expression{left, right})
+	if err != nil {
+		return BinaryOperator{}, err
+	}
 
 	return BinaryOperator{
 		Operator: operator,
-		delegate: f,
+		delegate: delegate,
 		Left:     left,
 		Right:    right,
-	}
+	}, nil
 }
 
 type BinaryOperator struct {
 	Operator string
-	delegate delegateFunc
+	delegate FuncCall
 	Left     Expression
 	Right    Expression
 }
 
 func (b BinaryOperator) Evaluate(ec EvaluationContext) (any, error) {
-	leftResult, err := b.Left.Evaluate(ec)
-	if err != nil {
-		return nil, err
-	}
-	rightResult, err := b.Right.Evaluate(ec)
-	if err != nil {
-		return nil, err
-	}
-
-	return b.delegate(leftResult, rightResult)
+	return b.delegate.Evaluate(ec)
 }
 
 func (b BinaryOperator) String() string {
 	return fmt.Sprintf("%v %v %v", b.Left.String(), b.Operator, b.Right.String())
-}
-
-func operatorEq(left any, right any) (any, error) {
-	return reflect.DeepEqual(left, right), nil
 }

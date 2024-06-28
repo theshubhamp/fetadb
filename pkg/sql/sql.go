@@ -123,7 +123,7 @@ func ToExpression(node *pg_query.Node) (expr.Expression, error) {
 				return nil, err
 			}
 
-			return expr.NewBinaryOperator(operator, leftExpr, rightExpr), nil
+			return expr.NewBinaryOperator(operator, leftExpr, rightExpr)
 		}
 	} else if node.GetFuncCall() != nil {
 		name := node.GetFuncCall().GetFuncname()[0].GetString_().GetSval()

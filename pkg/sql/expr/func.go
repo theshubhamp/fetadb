@@ -3,15 +3,21 @@ package expr
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
-var methods = map[string]reflect.Value{
+var functions = map[string]reflect.Value{
+	"=":     reflect.ValueOf(Eq),
+	"+":     reflect.ValueOf(Add),
+	"-":     reflect.ValueOf(Subtract),
+	"*":     reflect.ValueOf(Multiply),
+	"/":     reflect.ValueOf(Divide),
 	"lower": reflect.ValueOf(Lower),
 	"upper": reflect.ValueOf(Upper),
 }
 
 func NewFuncCall(name string, args []Expression) (FuncCall, error) {
-	delegate, ok := methods[name]
+	delegate, ok := functions[name]
 	if !ok {
 		return FuncCall{}, fmt.Errorf("function %v not found", name)
 	}
@@ -45,5 +51,10 @@ func (f FuncCall) Evaluate(ec EvaluationContext) (any, error) {
 }
 
 func (f FuncCall) String() string {
-	panic("implement me")
+	args := []string{}
+	for _, arg := range f.Args {
+		args = append(args, arg.String())
+	}
+
+	return fmt.Sprintf("%v(%v)", f.Name, strings.Join(args, ","))
 }
