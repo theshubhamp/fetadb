@@ -41,8 +41,8 @@ func ToDataRows(dataframe *DataFrame) []pgx.DataRow {
 		return []pgx.DataRow{}
 	}
 
-	numCols := len(*dataframe)
-	numRows := len((*dataframe)[0].Items)
+	numCols := dataframe.ColCount()
+	numRows := dataframe.RowCount()
 
 	rows := []pgx.DataRow{}
 

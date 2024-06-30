@@ -45,10 +45,10 @@ func TestSeqScan(t *testing.T) {
 		t.Errorf("failed to open db: %v", err)
 		return
 	}
-	if len(*df) != 2 {
+	if df.ColCount() != 2 {
 		t.Errorf("expected return of 1 column: %v", err)
 	}
-	if len((*df)[0].Items) != 4 {
+	if df.RowCount() != 4 {
 		t.Errorf("expected return of 4 rows: %v", err)
 	}
 }

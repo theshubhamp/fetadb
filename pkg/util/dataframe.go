@@ -17,3 +17,15 @@ func (df *DataFrame) GetColumn(name string) *Column {
 
 	return nil
 }
+
+func (df *DataFrame) RowCount() uint64 {
+	if len(*df) == 0 {
+		return 0
+	}
+
+	return uint64(len((*df)[0].Items))
+}
+
+func (df *DataFrame) ColCount() uint64 {
+	return uint64(len(*df))
+}
