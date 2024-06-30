@@ -90,3 +90,7 @@ func Lower(val string) string {
 func Upper(val string) string {
 	return strings.ToUpper(val)
 }
+
+func Concat(left string, right string) string {
+	return left + right
+}

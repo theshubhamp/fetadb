@@ -16,6 +16,7 @@ var functions = map[string]reflect.Value{
 	"/":     reflect.ValueOf(Divide),
 	"lower": reflect.ValueOf(Lower),
 	"upper": reflect.ValueOf(Upper),
+	"||":    reflect.ValueOf(Concat),
 }
 
 func NewFuncCall(name string, args []Expression) (FuncCall, error) {

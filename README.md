@@ -13,7 +13,7 @@ Primary Key and Not-Null
 * In-Memory & Disk Mode. Add option `-dbpath memory` or `-dbpath path/to/dir`
 * Non Indexed Table Scan
 * Limited support for select, create table, insert into table. For example select does not support where filers
-* Operator dispatch, supported `=`, `+`, `-`, `*` & `/`
+* Operator dispatch, supported `=`, `+`, `-`, `*`, `/` and `||`
 * Functions dispatch, supported `lower`, `upper`
 
 #### Unsupported Features (Current)
