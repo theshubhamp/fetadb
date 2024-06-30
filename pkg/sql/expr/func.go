@@ -17,6 +17,7 @@ var functions = map[string]reflect.Value{
 	"lower": reflect.ValueOf(Lower),
 	"upper": reflect.ValueOf(Upper),
 	"||":    reflect.ValueOf(Concat),
+	"md5":   reflect.ValueOf(Md5),
 }
 
 func NewFuncCall(name string, args []Expression) (FuncCall, error) {

@@ -1,6 +1,8 @@
 package expr
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fetadb/pkg/util"
 	"fmt"
 	"reflect"
@@ -93,4 +95,9 @@ func Upper(val string) string {
 
 func Concat(left string, right string) string {
 	return left + right
+}
+
+func Md5(val string) string {
+	hash := md5.Sum([]byte(val))
+	return hex.EncodeToString(hash[:])
 }

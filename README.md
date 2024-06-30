@@ -14,7 +14,7 @@ Primary Key and Not-Null
 * Non Indexed Table Scan
 * Limited support for select, create table, insert into table. For example select does not support where filers
 * Operator dispatch, supported `=`, `+`, `-`, `*`, `/` and `||`
-* Functions dispatch, supported `lower`, `upper`
+* Functions dispatch, supported `lower`, `upper`, `md5`
 
 #### Unsupported Features (Current)
 * Statements other than select, create table, insert into table
