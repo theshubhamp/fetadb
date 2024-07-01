@@ -16,7 +16,7 @@ func ToRowDescription(dataframe *DataFrame) *pgx.RowDescription {
 	}
 
 	columnId := 0
-	for _, column := range *dataframe {
+	for _, column := range dataframe.Columns {
 		columnName := ""
 		if column.Name != "" {
 			columnName = column.Name
@@ -49,7 +49,7 @@ func ToDataRows(dataframe *DataFrame) []pgx.DataRow {
 	for idxRow := range numRows {
 		columns := [][]byte{}
 		for idxCol := range numCols {
-			marshalled, _ := json.Marshal((*dataframe)[idxCol].Items[idxRow])
+			marshalled, _ := json.Marshal(dataframe.Columns[idxCol].Items[idxRow])
 			columns = append(columns, marshalled)
 		}
 		rows = append(rows, pgx.DataRow{Values: columns})

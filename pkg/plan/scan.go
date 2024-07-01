@@ -53,7 +53,7 @@ func (s SeqScan) Do(db *badger.DB) (*util.DataFrame, error) {
 		}
 
 		for _, value := range columns {
-			results = append(results, *value)
+			results.Columns = append(results.Columns, *value)
 		}
 		return nil
 	})

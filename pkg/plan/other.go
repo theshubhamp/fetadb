@@ -37,7 +37,7 @@ func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 				return nil, err
 			}
 
-			result = append(result, util.Column{
+			result.Columns = append(result.Columns, util.Column{
 				ID:    columnID,
 				Name:  target.Value.String(),
 				Items: []any{evaluated},
@@ -52,7 +52,7 @@ func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 		}
 
 		result := util.DataFrame{}
-		numRows := len((*childResult)[0].Items)
+		numRows := childResult.RowCount()
 
 		columnID := uint64(0)
 		for _, target := range r.Targets {
@@ -61,7 +61,7 @@ func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 				currentColumnName = target.Value.String()
 			}
 
-			result = append(result, util.Column{
+			result.Columns = append(result.Columns, util.Column{
 				ID:    columnID,
 				Name:  currentColumnName,
 				Items: []any{},
@@ -70,13 +70,13 @@ func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 		}
 
 		for rowIdx := range numRows {
-			for colIdx, _ := range result {
+			for colIdx, _ := range result.Columns {
 				evaluated, err := r.Targets[colIdx].Value.Evaluate(RowEvaluationContext{DF: childResult, Row: uint64(rowIdx)})
 				if err != nil {
 					return nil, err
 				}
 
-				result[colIdx].Items = append(result[colIdx].Items, evaluated)
+				result.Columns[colIdx].Items = append(result.Columns[colIdx].Items, evaluated)
 			}
 		}
 
