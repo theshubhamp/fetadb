@@ -5,19 +5,21 @@ import (
 )
 
 func Select(selectStatement stmt.Select) Node {
-	if len(selectStatement.From) == 0 {
-		return Result{
-			Targets: selectStatement.Targets,
-			Child:   nil,
-		}
-	}
+	var preResultNode Node
 
 	if len(selectStatement.From) == 1 {
-		return Result{
-			Targets: selectStatement.Targets,
-			Child:   SeqScan{TableName: selectStatement.From[0].Rel},
+		preResultNode = SeqScan{TableName: selectStatement.From[0].Rel}
+
+		if len(selectStatement.SortBy) > 0 {
+			preResultNode = Sort{
+				SortBy: selectStatement.SortBy,
+				Child:  preResultNode,
+			}
 		}
 	}
 
-	return nil
+	return Result{
+		Targets: selectStatement.Targets,
+		Child:   preResultNode,
+	}
 }

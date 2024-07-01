@@ -15,6 +15,7 @@ Primary Key and Not-Null
 * Limited support for select, create table, insert into table. For example select does not support where filers
 * Operator dispatch, supported `=`, `+`, `-`, `*`, `/` and `||`
 * Functions dispatch, supported `lower`, `upper`, `md5`
+* Sort (In-Memory)
 
 #### Unsupported Features (Current)
 * Statements other than select, create table, insert into table
@@ -58,6 +59,27 @@ mac=> select id, name from table_name;
 ------+-----------------
  2    | "Jon Doe"
  3    | "Tom Ford"
+(2 rows)
+
+mac=> select id, name from table_name order by name ASC;
+ id |    name
+----+------------
+ 2  | "Jon Doe"
+ 3  | "Tom Ford"
+(2 rows)
+
+mac=> select id, name from table_name order by id DESC;
+ id |    name
+----+------------
+ 3  | "Tom Ford"
+ 2  | "Jon Doe"
+(2 rows)
+
+mac=> select id, name from table_name order by name DESC;
+ id |    name
+----+------------
+ 3  | "Tom Ford"
+ 2  | "Jon Doe"
 (2 rows)
 
 mac=>

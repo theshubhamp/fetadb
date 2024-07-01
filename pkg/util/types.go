@@ -5,6 +5,13 @@ import (
 	"reflect"
 )
 
+type SortOrder int
+
+const (
+	SortAsc SortOrder = iota
+	SortDesc
+)
+
 func ToString(val any) string {
 	switch v := val.(type) {
 	case string:

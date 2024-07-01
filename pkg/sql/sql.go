@@ -73,10 +73,33 @@ func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
 		where = whereExpr
 	}
 
+	sortBy := []stmt.SortBy{}
+	for _, sortClause := range selectStmt.GetSortClause() {
+		sortByClause := sortClause.GetSortBy()
+		if sortByClause.GetNode().GetColumnRef() == nil {
+			return stmt.Select{}, fmt.Errorf("expected sort by to contain a column ref")
+		}
+
+		columnRef, err := ToExpression(sortByClause.GetNode())
+		if sortByClause.GetNode().GetColumnRef() == nil {
+			return stmt.Select{}, err
+		}
+
+		order := util.SortAsc
+		if sortByClause.SortbyDir == pg_query.SortByDir_SORTBY_ASC {
+			order = util.SortAsc
+		} else if sortByClause.SortbyDir == pg_query.SortByDir_SORTBY_DESC {
+			order = util.SortDesc
+		}
+
+		sortBy = append(sortBy, stmt.SortBy{Ref: columnRef.(expr.ColumnRef), Order: order})
+	}
+
 	return stmt.Select{
 		Targets: targets,
 		From:    froms,
 		Where:   where,
+		SortBy:  sortBy,
 	}, nil
 }
 

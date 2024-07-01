@@ -85,8 +85,27 @@ func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 }
 
 type Sort struct {
+	SortBy []stmt.SortBy
+	Child  Node
 }
 
 func (s Sort) Do(db *badger.DB) (*util.DataFrame, error) {
-	return nil, fmt.Errorf("not implemented")
+	childResult, err := s.Child.Do(db)
+	if err != nil {
+		return childResult, err
+	}
+
+	spec := util.Sort{
+		Columns: []string{},
+		Order:   []util.SortOrder{},
+	}
+
+	for _, sortBy := range s.SortBy {
+		spec.Columns = append(spec.Columns, sortBy.Ref.String())
+		spec.Order = append(spec.Order, sortBy.Order)
+	}
+
+	childResult.Sort(spec)
+
+	return childResult, nil
 }
