@@ -1,11 +1,22 @@
 package kv
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
 var (
-	PrefixMeta = byte('\x01')
-	PrefixData = byte('\x02')
+	SeqTableID       = []byte{byte('\x01')}
+	PrefixTableSpace = byte('\x02')
+	PrefixData       = byte('\x03')
 )
+
+func TableName(val string) []byte {
+	return append([]byte{PrefixTableSpace}, val...)
+}
+
+func TableID(val uint64) []byte {
+	return binary.BigEndian.AppendUint64([]byte{PrefixTableSpace}, val)
+}
 
 type DKey []byte
 

@@ -2,8 +2,8 @@ package stmt
 
 import (
 	"bytes"
-	"encoding/binary"
 	"encoding/gob"
+	"fetadb/pkg/kv"
 	"fetadb/pkg/kv/encoding"
 	"fetadb/pkg/sql/dd"
 	"fmt"
@@ -36,8 +36,6 @@ func CreateTable(db *badger.DB, create Create) error {
 		return fmt.Errorf("duplicate table: %v", create.Table.Rel)
 	}
 
-	tableId := uint64(0)
-
 	columns := []dd.Column{}
 	columnId := 0
 	for _, columnDef := range create.Columns {
@@ -52,35 +50,43 @@ func CreateTable(db *badger.DB, create Create) error {
 	}
 
 	buffer := bytes.NewBuffer([]byte{})
-	err = gob.NewEncoder(buffer).Encode(&dd.Table{
-		ID:      tableId,
-		Name:    create.Table.Rel,
-		Columns: columns,
-	})
-	if err != nil {
-		return err
-	}
 
 	return db.Update(func(txn *badger.Txn) error {
+		seq, err := db.GetSequence(kv.SeqTableID, 1)
+		defer seq.Release()
+		tableId, err := seq.Next()
+		if err != nil {
+			return err
+		}
+
+		err = gob.NewEncoder(buffer).Encode(&dd.Table{
+			ID:      tableId,
+			Name:    create.Table.Rel,
+			Columns: columns,
+		})
+		if err != nil {
+			return err
+		}
+
 		encoded, err := encoding.Encode(tableId)
 		if err != nil {
 			return err
 		}
 
-		err = txn.Set([]byte(create.Table.Rel), encoded)
+		err = txn.Set(kv.TableName(create.Table.Rel), encoded)
 		if err != nil {
 			return err
 		}
 
-		return txn.Set(binary.BigEndian.AppendUint64([]byte{}, tableId), buffer.Bytes())
+		return txn.Set(kv.TableID(tableId), buffer.Bytes())
 	})
 }
 
 func GetTableByName(db *badger.DB, name string) (dd.Table, error) {
-	tableId := uint64(0)
+	tableId := uint64(1)
 
 	err := db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte(name))
+		item, err := txn.Get(kv.TableName(name))
 		if err != nil {
 			return err
 		}
@@ -105,7 +111,7 @@ func GetTableByID(db *badger.DB, id uint64) (dd.Table, error) {
 	table := dd.Table{}
 
 	return table, db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(binary.BigEndian.AppendUint64([]byte{}, id))
+		item, err := txn.Get(kv.TableID(id))
 		if err != nil {
 			return err
 		}
