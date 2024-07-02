@@ -54,14 +54,18 @@ func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
 
 	froms := []stmt.From{}
 	for _, fromClause := range selectStmt.GetFromClause() {
-		rangeVar := fromClause.GetRangeVar()
-		from := stmt.From{
-			Catalog: rangeVar.GetCatalogname(),
-			Schema:  rangeVar.GetSchemaname(),
-			Rel:     rangeVar.GetRelname(),
-			Alias:   rangeVar.GetAlias().GetAliasname(),
+		if fromClause.GetRangeVar() != nil {
+			rangeVar := fromClause.GetRangeVar()
+			from := stmt.From{
+				Catalog: rangeVar.GetCatalogname(),
+				Schema:  rangeVar.GetSchemaname(),
+				Rel:     rangeVar.GetRelname(),
+				Alias:   rangeVar.GetAlias().GetAliasname(),
+			}
+			froms = append(froms, from)
+		} else {
+			return stmt.Select{}, fmt.Errorf("from clause %v not supported", reflect.TypeOf(fromClause.GetNode()))
 		}
-		froms = append(froms, from)
 	}
 
 	var where expr.Expression = nil
