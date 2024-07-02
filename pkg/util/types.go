@@ -5,11 +5,27 @@ import (
 	"reflect"
 )
 
+type null struct {
+}
+
+var (
+	Null = null{}
+)
+
 type SortOrder int
 
 const (
 	SortAsc SortOrder = iota
 	SortDesc
+)
+
+type JoinType uint64
+
+const (
+	JoinInner JoinType = iota
+	JoinLeft
+	JoinRight
+	JoinFull
 )
 
 func ToString(val any) string {

@@ -10,11 +10,11 @@ import (
 )
 
 type SeqScan struct {
-	TableName string
+	TableRef string
 }
 
 func (s SeqScan) Do(db *badger.DB) (*util.DataFrame, error) {
-	table, err := stmt.GetTableByName(db, s.TableName)
+	table, err := stmt.GetTableByName(db, s.TableRef)
 	if err != nil {
 		return nil, err
 	}
@@ -22,13 +22,15 @@ func (s SeqScan) Do(db *badger.DB) (*util.DataFrame, error) {
 	columns := map[uint64]*util.Column{}
 	for _, column := range table.Columns {
 		columns[column.ID] = &util.Column{
-			ID:    column.ID,
-			Name:  column.Name,
-			Items: []any{},
+			ID:       column.ID,
+			Name:     column.Name,
+			TableRef: s.TableRef,
+			Items:    []any{},
 		}
 	}
 
 	results := util.DataFrame{}
+
 	return &results, db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
@@ -53,7 +55,7 @@ func (s SeqScan) Do(db *badger.DB) (*util.DataFrame, error) {
 		}
 
 		for _, value := range columns {
-			results.Columns = append(results.Columns, *value)
+			results.Columns = append(results.Columns, value)
 		}
 		return nil
 	})

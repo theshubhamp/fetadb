@@ -64,6 +64,10 @@ func (f FuncCall) Evaluate(ec EvaluationContext) (any, error) {
 			return nil, err
 		}
 
+		if evaluatedArg == nil {
+			evaluatedArg = util.Null
+		}
+
 		evaluatedArgs = append(evaluatedArgs, reflect.ValueOf(evaluatedArg))
 	}
 

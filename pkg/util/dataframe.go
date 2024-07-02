@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 )
 
 type DataFrame struct {
-	Columns []Column
+	Columns []*Column
 	sort    *Sort
 }
 
@@ -18,15 +19,75 @@ type Sort struct {
 }
 
 type Column struct {
-	ID    uint64
-	Name  string
-	Items []any
+	ID       uint64
+	Name     string
+	TableRef string
+	Items    []any
 }
 
-func (df *DataFrame) GetColumn(name string) *Column {
+func (c *Column) ColumnRef() ColumnRef {
+	return append(strings.Split(c.TableRef, "."), c.Name)
+}
+
+func (c *Column) Append(val any) {
+	c.Items = append(c.Items, val)
+}
+
+type ColumnRef []string
+
+func NewColumnRef(val string) ColumnRef {
+	return strings.Split(val, ".")
+}
+
+func (c ColumnRef) Catalog() string {
+	if len(c)-4 >= 0 {
+		return c[len(c)-4]
+	}
+
+	return ""
+}
+
+func (c ColumnRef) Schema() string {
+	if len(c)-3 >= 0 {
+		return c[len(c)-3]
+	}
+
+	return ""
+}
+
+func (c ColumnRef) Rel() string {
+	if len(c)-2 >= 0 {
+		return c[len(c)-2]
+	}
+
+	return ""
+}
+
+func (c ColumnRef) TableRef() string {
+	remaining := len(c) - 1
+	if remaining < 0 {
+		return ""
+	}
+
+	return strings.Join(c[0:remaining], ".")
+}
+
+func (c ColumnRef) Column() string {
+	if len(c)-1 >= 0 {
+		return c[len(c)-1]
+	}
+
+	return ""
+}
+
+func (c ColumnRef) Names() []string {
+	return c
+}
+
+func (df *DataFrame) GetColumn(ref ColumnRef) *Column {
 	for _, column := range df.Columns {
-		if column.Name == name {
-			return &column
+		if ref.TableRef() == column.TableRef && column.Name == ref.Column() {
+			return column
 		}
 	}
 
@@ -60,7 +121,7 @@ func (df *DataFrame) Less(i int, j int) bool {
 	}
 
 	for idx, columnName := range df.sort.Columns {
-		column := df.GetColumn(columnName)
+		column := df.GetColumn(NewColumnRef(columnName))
 
 		iValue := column.Items[i]
 		jValue := column.Items[j]
@@ -98,10 +159,16 @@ func (df *DataFrame) Swap(i int, j int) {
 }
 
 func less(left any, right any) bool {
+	if left == nil {
+		return true
+	} else if right == nil {
+		return false
+	}
+
 	leftValue, leftOk := NewNumber(left)
 	rightValue, rightOk := NewNumber(right)
 	if !leftOk || !rightOk {
-		return false
+		return cmp.Less(fmt.Sprintf("%v", left), fmt.Sprintf("%v", right))
 	}
 
 	if leftValue.IsFloat() || rightValue.IsFloat() {

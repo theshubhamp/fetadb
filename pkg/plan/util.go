@@ -7,14 +7,16 @@ import (
 )
 
 type RowEvaluationContext struct {
-	DF  *util.DataFrame
-	Row uint64
+	DFS  []*util.DataFrame
+	Rows []uint64
 }
 
 func (r RowEvaluationContext) LookupColumnRef(ref expr.ColumnRef) (any, error) {
-	for _, column := range r.DF.Columns {
-		if column.Name == ref.Name() {
-			return column.Items[r.Row], nil
+	for idx, df := range r.DFS {
+		for _, column := range df.Columns {
+			if column.TableRef == ref.TableRef() && column.Name == ref.Column() {
+				return column.Items[r.Rows[idx]], nil
+			}
 		}
 	}
 

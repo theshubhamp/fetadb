@@ -52,19 +52,32 @@ func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
 		targets = append(targets, target)
 	}
 
-	froms := []stmt.From{}
+	sources := []stmt.Source{}
 	for _, fromClause := range selectStmt.GetFromClause() {
-		if fromClause.GetRangeVar() != nil {
-			rangeVar := fromClause.GetRangeVar()
-			from := stmt.From{
-				Catalog: rangeVar.GetCatalogname(),
-				Schema:  rangeVar.GetSchemaname(),
-				Rel:     rangeVar.GetRelname(),
-				Alias:   rangeVar.GetAlias().GetAliasname(),
+		source, err := ToSource(fromClause)
+		if err != nil {
+			return stmt.Select{}, err
+		}
+
+		sources = append(sources, source)
+	}
+
+	var source stmt.Source
+	if len(sources) == 0 {
+		source = nil
+	} else if len(sources) == 1 {
+		source = sources[0]
+	} else {
+		source = sources[0]
+		for idx := 1; idx < len(sources); idx++ {
+			left := source
+			right := sources[idx]
+
+			source = stmt.Join{
+				Condition: expr.Literal{Value: true},
+				Left:      left,
+				Right:     right,
 			}
-			froms = append(froms, from)
-		} else {
-			return stmt.Select{}, fmt.Errorf("from clause %v not supported", reflect.TypeOf(fromClause.GetNode()))
 		}
 	}
 
@@ -85,7 +98,7 @@ func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
 		}
 
 		columnRef, err := ToExpression(sortByClause.GetNode())
-		if sortByClause.GetNode().GetColumnRef() == nil {
+		if err != nil {
 			return stmt.Select{}, err
 		}
 
@@ -101,10 +114,59 @@ func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
 
 	return stmt.Select{
 		Targets: targets,
-		From:    froms,
+		Source:  source,
 		Where:   where,
 		SortBy:  sortBy,
 	}, nil
+}
+
+func ToSource(node *pg_query.Node) (stmt.Source, error) {
+	if node.GetRangeVar() != nil {
+		return stmt.From{
+			Catalog: node.GetRangeVar().GetCatalogname(),
+			Schema:  node.GetRangeVar().GetSchemaname(),
+			Rel:     node.GetRangeVar().GetRelname(),
+			Alias:   node.GetRangeVar().GetAlias().GetAliasname(),
+		}, nil
+	} else if node.GetJoinExpr() != nil {
+		condition, err := ToExpression(node.GetJoinExpr().GetQuals())
+		if err != nil {
+			return nil, err
+		}
+
+		left, err := ToSource(node.GetJoinExpr().GetLarg())
+		if err != nil {
+			return nil, err
+		}
+
+		right, err := ToSource(node.GetJoinExpr().GetRarg())
+		if err != nil {
+			return nil, err
+		}
+
+		joinType := util.JoinInner
+		switch node.GetJoinExpr().GetJointype() {
+		case pg_query.JoinType_JOIN_INNER:
+			joinType = util.JoinInner
+		case pg_query.JoinType_JOIN_LEFT:
+			joinType = util.JoinLeft
+		case pg_query.JoinType_JOIN_RIGHT:
+			joinType = util.JoinRight
+		case pg_query.JoinType_JOIN_FULL:
+			joinType = util.JoinFull
+		default:
+			return nil, fmt.Errorf("unsupported join type: %v", node.GetJoinExpr().GetJointype().String())
+		}
+
+		return stmt.Join{
+			Condition: condition,
+			Type:      joinType,
+			Left:      left,
+			Right:     right,
+		}, nil
+	} else {
+		return nil, fmt.Errorf("souce / from clause %v not supported", reflect.TypeOf(node.GetNode()))
+	}
 }
 
 func ToExpression(node *pg_query.Node) (expr.Expression, error) {
@@ -119,6 +181,11 @@ func ToExpression(node *pg_query.Node) (expr.Expression, error) {
 				return nil, fmt.Errorf("unsupported column ref: %v", reflect.TypeOf(field.GetNode()))
 			}
 		}
+
+		ref := expr.ColumnRef(refs)
+		if ref.TableRef() == "" {
+			return nil, fmt.Errorf("unqualified column ref: %v", ref.String())
+		}
 		return expr.ColumnRef(refs), nil
 	} else if node.GetAConst() != nil {
 		aconst := node.GetAConst()
@@ -131,6 +198,8 @@ func ToExpression(node *pg_query.Node) (expr.Expression, error) {
 		} else if aconst.GetFval() != nil {
 			parsedFloat, err := strconv.ParseFloat(aconst.GetFval().GetFval(), 64)
 			return expr.Literal{Value: parsedFloat}, err
+		} else if aconst.GetVal() == nil {
+			return expr.Literal{Value: nil}, nil
 		}
 	} else if node.GetAExpr() != nil {
 		switch node.GetAExpr().GetKind() {
