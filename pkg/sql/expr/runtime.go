@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Eq(left any, right any) (any, error) {
+func Eq(left any, right any) (bool, error) {
 	return reflect.DeepEqual(left, right), nil
 }
 
