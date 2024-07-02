@@ -127,14 +127,18 @@ func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage)
 			} else {
 				statement := statements[0]
 				if selectStatement, ok := statement.(stmt.Select); ok {
-					planNode := plan.Select(selectStatement)
-					result, err := planNode.Do(db)
+					planNode, err := plan.Select(selectStatement)
 					if err != nil {
 						backend.Send(&pgx.ErrorResponse{Message: err.Error()})
 					} else {
-						backend.Send(util.ToRowDescription(result))
-						for _, row := range util.ToDataRows(result) {
-							backend.Send(&row)
+						result, err := planNode.Do(db)
+						if err != nil {
+							backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+						} else {
+							backend.Send(util.ToRowDescription(result))
+							for _, row := range util.ToDataRows(result) {
+								backend.Send(&row)
+							}
 						}
 					}
 				} else if createStatement, ok := statement.(stmt.Create); ok {

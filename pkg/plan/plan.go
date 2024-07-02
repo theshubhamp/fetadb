@@ -4,7 +4,7 @@ import (
 	"fetadb/pkg/sql/stmt"
 )
 
-func Select(selectStatement stmt.Select) Node {
+func Select(selectStatement stmt.Select) (Node, error) {
 	var preResultNode Node
 
 	if len(selectStatement.From) == 1 {
@@ -21,5 +21,5 @@ func Select(selectStatement stmt.Select) Node {
 	return Result{
 		Targets: selectStatement.Targets,
 		Child:   preResultNode,
-	}
+	}, nil
 }
