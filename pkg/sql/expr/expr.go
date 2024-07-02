@@ -23,9 +23,7 @@ func (e Equals) String() string {
 	return fmt.Sprintf("%v = %v", e.Left.String(), e.Right.String())
 }
 
-type ColumnRef struct {
-	Names []string
-}
+type ColumnRef []string
 
 func (c ColumnRef) Evaluate(ec EvaluationContext) (any, error) {
 	if ec == nil {
@@ -35,8 +33,16 @@ func (c ColumnRef) Evaluate(ec EvaluationContext) (any, error) {
 	return ec.LookupColumnRef(c)
 }
 
+func (c ColumnRef) Name() string {
+	return c[len(c)-1]
+}
+
+func (c ColumnRef) Names() []string {
+	return c
+}
+
 func (c ColumnRef) String() string {
-	return strings.Join(c.Names, ".")
+	return strings.Join(c, ".")
 }
 
 type Literal struct {

@@ -115,7 +115,7 @@ func ToExpression(node *pg_query.Node) (expr.Expression, error) {
 				return nil, fmt.Errorf("unsupported column ref: %v", reflect.TypeOf(field.GetNode()))
 			}
 		}
-		return expr.ColumnRef{Names: refs}, nil
+		return expr.ColumnRef(refs), nil
 	} else if node.GetAConst() != nil {
 		aconst := node.GetAConst()
 		if aconst.GetSval() != nil {
