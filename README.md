@@ -41,49 +41,40 @@ go run fetadb
 psql (16.3, server 16.0)
 Type "help" for help.
 
-mac=> CREATE TABLE table_name (id uint64 NOT NULL PRIMARY KEY, name string);
---
-(0 rows)
+mac=> CREATE TABLE Departments(DepartmentID uint64 PRIMARY KEY, DepartmentName string NOT NULL);
 
-mac=> select id, name from table_name;
- res0 | res1
-------+------
-(0 rows)
+mac=> CREATE TABLE Employees(EmployeeID uint64 PRIMARY KEY, FirstName string NOT NULL, LastName string NOT NULL, DepartmentID uint64, Salary float64);
 
-mac=> insert into table_name (id, name) values (3, 'Tom Ford');
+mac=> INSERT INTO Departments (DepartmentID, DepartmentName) 
+      VALUES (1, 'HR'), (2, 'IT'), (3, 'Finance'), (4, 'Marketing'), (5, 'Operations');
+      
+mac=> INSERT INTO Employees (EmployeeID, FirstName, LastName, DepartmentID, Salary)
+      VALUES  (1, 'John', 'Doe', 1, 60000),
+              (2, 'Jane', 'Smith', 2, 75000),
+              (3, 'Mike', 'Johnson', 3, 65000),
+              (4, 'Emily', 'Brown', 2, 72000),
+              (5, 'David', 'Lee', 4, 68000),
+              (6, 'Sarah', 'Wilson', 1, 62000),
+              (7, 'Tom', 'Davis', 5, 55000),
+              (8, 'Anna', 'Taylor', 3, 70000),
+              (9, 'Chris', 'Anderson', 5, 58000),
+              (10, 'Lisa', 'Thomas', 5, 59000);
 
-mac=> insert into table_name (id, name) values (2, 'Jon Doe');
+mac=> select EmployeeID, FirstName, LastName, DepartmentID, Salary from Employees order by departmentid desc, salary asc;
+ employeeid | firstname |  lastname  | departmentid | salary
+------------+-----------+------------+--------------+--------
+ 9          | "Chris"   | "Anderson" | 5            | 58000
+ 5          | "David"   | "Lee"      | 4            | 68000
+ 3          | "Mike"    | "Johnson"  | 3            | 65000
+ 8          | "Anna"    | "Taylor"   | 3            | 70000
+ 10         | "Lisa"    | "Thomas"   | 2            | 59000
+ 4          | "Emily"   | "Brown"    | 2            | 72000
+ 2          | "Jane"    | "Smith"    | 2            | 75000
+ 7          | "Tom"     | "Davis"    | 1            | 55000
+ 1          | "John"    | "Doe"      | 1            | 60000
+ 6          | "Sarah"   | "Wilson"   | 1            | 62000
+(10 rows)
 
-mac=> select id, name from table_name;
- res0 |      res1
-------+-----------------
- 2    | "Jon Doe"
- 3    | "Tom Ford"
-(2 rows)
-
-mac=> select id, name from table_name order by name ASC;
- id |    name
-----+------------
- 2  | "Jon Doe"
- 3  | "Tom Ford"
-(2 rows)
-
-mac=> select id, name from table_name order by id DESC;
- id |    name
-----+------------
- 3  | "Tom Ford"
- 2  | "Jon Doe"
-(2 rows)
-
-mac=> select id, name from table_name order by name DESC;
- id |    name
-----+------------
- 3  | "Tom Ford"
- 2  | "Jon Doe"
-(2 rows)
-
-mac=>
-mac=> ^D\q
 ```
 
 ### References
