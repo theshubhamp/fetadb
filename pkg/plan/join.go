@@ -2,19 +2,19 @@ package plan
 
 import (
 	"fetadb/pkg/sql/expr"
-	"fetadb/pkg/util"
+	"fetadb/pkg/util/types"
 	"fmt"
 	"github.com/dgraph-io/badger/v4"
 )
 
 type NestedJoin struct {
 	Condition expr.Expression
-	Type      util.JoinType
+	Type      types.JoinType
 	Left      Node
 	Right     Node
 }
 
-func (n NestedJoin) Do(db *badger.DB) (*util.DataFrame, error) {
+func (n NestedJoin) Do(db *badger.DB) (*types.DataFrame, error) {
 	leftResult, err := n.Left.Do(db)
 	if err != nil {
 		return nil, err
@@ -25,9 +25,9 @@ func (n NestedJoin) Do(db *badger.DB) (*util.DataFrame, error) {
 		return nil, err
 	}
 
-	joinedResult := util.DataFrame{}
+	joinedResult := types.DataFrame{}
 	for _, column := range leftResult.Columns {
-		joinedResult.Columns = append(joinedResult.Columns, &util.Column{
+		joinedResult.Columns = append(joinedResult.Columns, &types.Column{
 			ID:       column.ID,
 			TableRef: column.TableRef,
 			Name:     column.Name,
@@ -35,7 +35,7 @@ func (n NestedJoin) Do(db *badger.DB) (*util.DataFrame, error) {
 		})
 	}
 	for _, column := range rightResult.Columns {
-		joinedResult.Columns = append(joinedResult.Columns, &util.Column{
+		joinedResult.Columns = append(joinedResult.Columns, &types.Column{
 			ID:       column.ID,
 			Name:     column.Name,
 			TableRef: column.TableRef,
@@ -50,7 +50,7 @@ func (n NestedJoin) Do(db *badger.DB) (*util.DataFrame, error) {
 
 		for rightIdx := range rightResult.RowCount() {
 			evaluated, err := n.Condition.Evaluate(RowEvaluationContext{
-				DFS:  []*util.DataFrame{leftResult, rightResult},
+				DFS:  []*types.DataFrame{leftResult, rightResult},
 				Rows: []uint64{leftIdx, rightIdx},
 			})
 			if err != nil {
@@ -67,7 +67,7 @@ func (n NestedJoin) Do(db *badger.DB) (*util.DataFrame, error) {
 			}
 		}
 
-		if n.Type == util.JoinInner {
+		if n.Type == types.JoinInner {
 			if !joined {
 				continue
 			}
@@ -78,7 +78,7 @@ func (n NestedJoin) Do(db *badger.DB) (*util.DataFrame, error) {
 			for _, rightColumn := range rightResult.Columns {
 				joinedResult.GetColumn(rightColumn.ColumnRef()).Append(rightColumn.Items[joinedRightIdx])
 			}
-		} else if n.Type == util.JoinLeft {
+		} else if n.Type == types.JoinLeft {
 			for _, leftColumn := range leftResult.Columns {
 				joinedResult.GetColumn(leftColumn.ColumnRef()).Append(leftColumn.Items[leftIdx])
 			}
@@ -91,7 +91,7 @@ func (n NestedJoin) Do(db *badger.DB) (*util.DataFrame, error) {
 					joinedResult.GetColumn(rightColumn.ColumnRef()).Append(nil)
 				}
 			}
-		} else if n.Type == util.JoinRight {
+		} else if n.Type == types.JoinRight {
 			if joined {
 				for _, leftColumn := range leftResult.Columns {
 					joinedResult.GetColumn(leftColumn.ColumnRef()).Append(leftColumn.Items[leftIdx])
@@ -105,7 +105,7 @@ func (n NestedJoin) Do(db *badger.DB) (*util.DataFrame, error) {
 		}
 	}
 
-	if n.Type == util.JoinRight {
+	if n.Type == types.JoinRight {
 		for rightIdx := range rightResult.RowCount() {
 			if _, ok := joinedRightIndexes[rightIdx]; !ok {
 				for _, leftColumn := range leftResult.Columns {

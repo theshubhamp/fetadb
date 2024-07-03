@@ -1,7 +1,7 @@
 package expr
 
 import (
-	"fetadb/pkg/util"
+	"fetadb/pkg/util/types"
 	"fmt"
 	"strings"
 )
@@ -24,26 +24,26 @@ func (e Equals) String() string {
 	return fmt.Sprintf("%v = %v", e.Left.String(), e.Right.String())
 }
 
-type ColumnRef util.ColumnRef
+type ColumnRef types.ColumnRef
 
 func (c ColumnRef) Catalog() string {
-	return util.ColumnRef(c).Catalog()
+	return types.ColumnRef(c).Catalog()
 }
 
 func (c ColumnRef) Schema() string {
-	return util.ColumnRef(c).Schema()
+	return types.ColumnRef(c).Schema()
 }
 
 func (c ColumnRef) Rel() string {
-	return util.ColumnRef(c).Rel()
+	return types.ColumnRef(c).Rel()
 }
 
 func (c ColumnRef) TableRef() string {
-	return util.ColumnRef(c).TableRef()
+	return types.ColumnRef(c).TableRef()
 }
 
 func (c ColumnRef) Column() string {
-	return util.ColumnRef(c).Column()
+	return types.ColumnRef(c).Column()
 }
 
 func (c ColumnRef) Evaluate(ec EvaluationContext) (any, error) {

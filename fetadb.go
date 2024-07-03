@@ -4,7 +4,7 @@ import (
 	"fetadb/pkg/plan"
 	"fetadb/pkg/sql"
 	"fetadb/pkg/sql/stmt"
-	"fetadb/pkg/util"
+	"fetadb/pkg/util/types"
 	"flag"
 	"fmt"
 	"github.com/dgraph-io/badger/v4"
@@ -135,8 +135,8 @@ func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage)
 						if err != nil {
 							backend.Send(&pgx.ErrorResponse{Message: err.Error()})
 						} else {
-							backend.Send(util.ToRowDescription(result))
-							for _, row := range util.ToDataRows(result) {
+							backend.Send(types.ToRowDescription(result))
+							for _, row := range types.ToDataRows(result) {
 								backend.Send(&row)
 							}
 						}

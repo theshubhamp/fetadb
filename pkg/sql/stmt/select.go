@@ -2,7 +2,7 @@ package stmt
 
 import (
 	"fetadb/pkg/sql/expr"
-	"fetadb/pkg/util"
+	"fetadb/pkg/util/types"
 	"strings"
 )
 
@@ -45,7 +45,7 @@ func (f From) sourceMarker() {
 
 type Join struct {
 	Condition expr.Expression
-	Type      util.JoinType
+	Type      types.JoinType
 	Left      Source
 	Right     Source
 }
@@ -60,5 +60,5 @@ type Target struct {
 
 type SortBy struct {
 	Ref   expr.ColumnRef
-	Order util.SortOrder
+	Order types.SortOrder
 }

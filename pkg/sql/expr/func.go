@@ -1,7 +1,7 @@
 package expr
 
 import (
-	"fetadb/pkg/util"
+	"fetadb/pkg/util/types"
 	"fmt"
 	"math"
 	"reflect"
@@ -37,7 +37,7 @@ func NewFuncCall(name string, args []Expression) (FuncCall, error) {
 	resultOut := -1
 	errorOut := -1
 	for idx := range delegate.Type().NumOut() {
-		if util.IsError(delegate.Type().Out(idx)) {
+		if types.IsError(delegate.Type().Out(idx)) {
 			errorOut = idx
 		} else {
 			resultOut = int(math.Max(float64(resultOut), float64(idx)))
@@ -65,7 +65,7 @@ func (f FuncCall) Evaluate(ec EvaluationContext) (any, error) {
 		}
 
 		if evaluatedArg == nil {
-			evaluatedArg = util.Null
+			evaluatedArg = types.Null
 		}
 
 		evaluatedArgs = append(evaluatedArgs, reflect.ValueOf(evaluatedArg))

@@ -1,4 +1,4 @@
-package util
+package types
 
 import (
 	"cmp"
@@ -7,11 +7,6 @@ import (
 	"sort"
 	"strings"
 )
-
-type DataFrame struct {
-	Columns []*Column
-	sort    *Sort
-}
 
 type Sort struct {
 	Columns []string
@@ -82,6 +77,11 @@ func (c ColumnRef) Column() string {
 
 func (c ColumnRef) Names() []string {
 	return c
+}
+
+type DataFrame struct {
+	Columns []*Column
+	sort    *Sort
 }
 
 func (df *DataFrame) GetColumn(ref ColumnRef) *Column {

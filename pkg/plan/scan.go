@@ -5,6 +5,7 @@ import (
 	"fetadb/pkg/kv/encoding"
 	"fetadb/pkg/sql/stmt"
 	"fetadb/pkg/util"
+	"fetadb/pkg/util/types"
 	"fmt"
 	"github.com/dgraph-io/badger/v4"
 )
@@ -13,15 +14,15 @@ type SeqScan struct {
 	TableRef string
 }
 
-func (s SeqScan) Do(db *badger.DB) (*util.DataFrame, error) {
+func (s SeqScan) Do(db *badger.DB) (*types.DataFrame, error) {
 	table, err := stmt.GetTableByName(db, s.TableRef)
 	if err != nil {
 		return nil, err
 	}
 
-	columns := map[uint64]*util.Column{}
+	columns := map[uint64]*types.Column{}
 	for _, column := range table.Columns {
-		columns[column.ID] = &util.Column{
+		columns[column.ID] = &types.Column{
 			ID:       column.ID,
 			Name:     column.Name,
 			TableRef: s.TableRef,
@@ -29,7 +30,7 @@ func (s SeqScan) Do(db *badger.DB) (*util.DataFrame, error) {
 		}
 	}
 
-	results := util.DataFrame{}
+	results := types.DataFrame{}
 
 	return &results, db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)

@@ -2,12 +2,12 @@ package plan
 
 import (
 	"fetadb/pkg/sql/expr"
-	"fetadb/pkg/util"
+	"fetadb/pkg/util/types"
 	"fmt"
 )
 
 type RowEvaluationContext struct {
-	DFS  []*util.DataFrame
+	DFS  []*types.DataFrame
 	Rows []uint64
 }
 

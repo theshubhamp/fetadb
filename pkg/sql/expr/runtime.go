@@ -3,7 +3,7 @@ package expr
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"fetadb/pkg/util"
+	"fetadb/pkg/util/types"
 	"fmt"
 	"reflect"
 	"strings"
@@ -14,8 +14,8 @@ func Eq(left any, right any) (bool, error) {
 }
 
 func Add(left any, right any) (any, error) {
-	leftValue, leftOk := util.NewNumber(left)
-	rightValue, rightOk := util.NewNumber(right)
+	leftValue, leftOk := types.NewNumber(left)
+	rightValue, rightOk := types.NewNumber(right)
 	if !leftOk || !rightOk {
 		return nil, fmt.Errorf("left %v and right %v expected to be numbers", left, right)
 	}
@@ -32,8 +32,8 @@ func Add(left any, right any) (any, error) {
 }
 
 func Subtract(left any, right any) (any, error) {
-	leftValue, leftOk := util.NewNumber(left)
-	rightValue, rightOk := util.NewNumber(right)
+	leftValue, leftOk := types.NewNumber(left)
+	rightValue, rightOk := types.NewNumber(right)
 	if !leftOk || !rightOk {
 		return nil, fmt.Errorf("left %v and right %v expected to be numbers", left, right)
 	}
@@ -50,8 +50,8 @@ func Subtract(left any, right any) (any, error) {
 }
 
 func Multiply(left any, right any) (any, error) {
-	leftValue, leftOk := util.NewNumber(left)
-	rightValue, rightOk := util.NewNumber(right)
+	leftValue, leftOk := types.NewNumber(left)
+	rightValue, rightOk := types.NewNumber(right)
 	if !leftOk || !rightOk {
 		return nil, fmt.Errorf("left %v and right %v expected to be numbers", left, right)
 	}
@@ -68,8 +68,8 @@ func Multiply(left any, right any) (any, error) {
 }
 
 func Divide(left any, right any) (any, error) {
-	leftValue, leftOk := util.NewNumber(left)
-	rightValue, rightOk := util.NewNumber(right)
+	leftValue, leftOk := types.NewNumber(left)
+	rightValue, rightOk := types.NewNumber(right)
 	if !leftOk || !rightOk {
 		return nil, fmt.Errorf("left %v and right %v expected to be numbers", left, right)
 	}

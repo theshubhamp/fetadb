@@ -1,8 +1,15 @@
-package util
+package types
 
 import (
 	"fmt"
 	"reflect"
+)
+
+type null struct {
+}
+
+var (
+	Null = null{}
 )
 
 type Number struct {

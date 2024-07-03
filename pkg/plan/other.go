@@ -2,7 +2,7 @@ package plan
 
 import (
 	"fetadb/pkg/sql/stmt"
-	"fetadb/pkg/util"
+	"fetadb/pkg/util/types"
 	"fmt"
 	"github.com/dgraph-io/badger/v4"
 )
@@ -10,14 +10,14 @@ import (
 type Aggregate struct {
 }
 
-func (a Aggregate) Do(db *badger.DB) (*util.DataFrame, error) {
+func (a Aggregate) Do(db *badger.DB) (*types.DataFrame, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
 type Append struct {
 }
 
-func (a Append) Do(db *badger.DB) (*util.DataFrame, error) {
+func (a Append) Do(db *badger.DB) (*types.DataFrame, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
@@ -26,9 +26,9 @@ type Result struct {
 	Child   Node
 }
 
-func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
+func (r Result) Do(db *badger.DB) (*types.DataFrame, error) {
 	if r.Child == nil {
-		result := util.DataFrame{}
+		result := types.DataFrame{}
 
 		columnID := uint64(0)
 		for _, target := range r.Targets {
@@ -37,7 +37,7 @@ func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 				return nil, err
 			}
 
-			result.Columns = append(result.Columns, &util.Column{
+			result.Columns = append(result.Columns, &types.Column{
 				ID:    columnID,
 				Name:  target.Value.String(),
 				Items: []any{evaluated},
@@ -51,7 +51,7 @@ func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 			return childResult, err
 		}
 
-		result := util.DataFrame{}
+		result := types.DataFrame{}
 		numRows := childResult.RowCount()
 
 		columnID := uint64(0)
@@ -61,7 +61,7 @@ func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 				currentColumnName = target.Value.String()
 			}
 
-			result.Columns = append(result.Columns, &util.Column{
+			result.Columns = append(result.Columns, &types.Column{
 				ID:    columnID,
 				Name:  currentColumnName,
 				Items: []any{},
@@ -72,7 +72,7 @@ func (r Result) Do(db *badger.DB) (*util.DataFrame, error) {
 		for rowIdx := range numRows {
 			for colIdx, _ := range result.Columns {
 				evaluated, err := r.Targets[colIdx].Value.Evaluate(RowEvaluationContext{
-					DFS:  []*util.DataFrame{childResult},
+					DFS:  []*types.DataFrame{childResult},
 					Rows: []uint64{rowIdx},
 				})
 				if err != nil {
@@ -92,15 +92,15 @@ type Sort struct {
 	Child  Node
 }
 
-func (s Sort) Do(db *badger.DB) (*util.DataFrame, error) {
+func (s Sort) Do(db *badger.DB) (*types.DataFrame, error) {
 	childResult, err := s.Child.Do(db)
 	if err != nil {
 		return childResult, err
 	}
 
-	spec := util.Sort{
+	spec := types.Sort{
 		Columns: []string{},
-		Order:   []util.SortOrder{},
+		Order:   []types.SortOrder{},
 	}
 
 	for _, sortBy := range s.SortBy {

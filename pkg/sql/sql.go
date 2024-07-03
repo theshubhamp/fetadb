@@ -4,6 +4,7 @@ import (
 	"fetadb/pkg/sql/expr"
 	"fetadb/pkg/sql/stmt"
 	"fetadb/pkg/util"
+	"fetadb/pkg/util/types"
 	"fmt"
 	pg_query "github.com/pganalyze/pg_query_go/v5"
 	"reflect"
@@ -102,11 +103,11 @@ func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
 			return stmt.Select{}, err
 		}
 
-		order := util.SortAsc
+		order := types.SortAsc
 		if sortByClause.SortbyDir == pg_query.SortByDir_SORTBY_ASC {
-			order = util.SortAsc
+			order = types.SortAsc
 		} else if sortByClause.SortbyDir == pg_query.SortByDir_SORTBY_DESC {
-			order = util.SortDesc
+			order = types.SortDesc
 		}
 
 		sortBy = append(sortBy, stmt.SortBy{Ref: columnRef.(expr.ColumnRef), Order: order})
@@ -144,16 +145,16 @@ func ToSource(node *pg_query.Node) (stmt.Source, error) {
 			return nil, err
 		}
 
-		joinType := util.JoinInner
+		joinType := types.JoinInner
 		switch node.GetJoinExpr().GetJointype() {
 		case pg_query.JoinType_JOIN_INNER:
-			joinType = util.JoinInner
+			joinType = types.JoinInner
 		case pg_query.JoinType_JOIN_LEFT:
-			joinType = util.JoinLeft
+			joinType = types.JoinLeft
 		case pg_query.JoinType_JOIN_RIGHT:
-			joinType = util.JoinRight
+			joinType = types.JoinRight
 		case pg_query.JoinType_JOIN_FULL:
-			joinType = util.JoinFull
+			joinType = types.JoinFull
 		default:
 			return nil, fmt.Errorf("unsupported join type: %v", node.GetJoinExpr().GetJointype().String())
 		}
