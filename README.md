@@ -12,16 +12,16 @@ Primary Key and Not-Null
 #### Supported Features
 * In-Memory & Disk Mode. Add option `-dbpath memory` or `-dbpath path/to/dir`
 * Non Indexed Table Scan
-* Nested Loop Join
+* Joins (Nested Loop)
 * Limited support for select, create table, insert into table. For example select does not support where filers
 * Operator dispatch, supported `=`, `+`, `-`, `*`, `/` and `||`
 * Functions dispatch, supported `lower`, `upper`, `md5`
 * Sort (In-Memory)
 
 #### Unsupported Features (Current)
-* Statements other than select, create table, insert into table
+* Non-trivial select, create, insert
 * Scan Filter, Index Scan Filter
-* Index Scan, Join, Group By etc.
+* Join (Hash & Merge), Group By etc.
 * Secondary Indexes
 * Type Checking on Insert
 
@@ -61,7 +61,9 @@ mac=> INSERT INTO Employees (EmployeeID, FirstName, LastName, DepartmentID, Sala
               (9, 'Chris', 'Anderson', 5, 58000),
               (10, 'Lisa', 'Thomas', NULL, 59000);
 
-mac=> select Employees.EmployeeID, Employees.FirstName, Employees.LastName, Employees.DepartmentID, Employees.Salary from Employees order by Employees.departmentid desc, Employees.salary asc;
+mac=> select Employees.EmployeeID, Employees.FirstName, Employees.LastName, Employees.DepartmentID, Employees.Salary 
+      FROM Employees
+      ORDER BY Employees.departmentid DESC, Employees.salary ASC;
  employees.employeeid | employees.firstname | employees.lastname | employees.departmentid | employees.salary
 ----------------------+---------------------+--------------------+------------------------+------------------
  9                    | "Chris"             | "Anderson"         | 5                      | 58000
@@ -76,7 +78,10 @@ mac=> select Employees.EmployeeID, Employees.FirstName, Employees.LastName, Empl
  10                   | "Lisa"              | "Thomas"           | null                   | 59000
 (10 rows)
 
-mac=> SELECT Employees.EmployeeID, Employees.FirstName, Employees.LastName, Departments.DepartmentName FROM Employees INNER JOIN Departments ON Employees.DepartmentID = Departments.DepartmentID;
+mac=> SELECT Employees.EmployeeID, Employees.FirstName, Employees.LastName, Departments.DepartmentName
+      FROM Employees 
+      INNER JOIN Departments
+      ON Employees.DepartmentID = Departments.DepartmentID;
  employees.employeeid | employees.firstname | employees.lastname | departments.departmentname
 ----------------------+---------------------+--------------------+----------------------------
  1                    | "John"              | "Doe"              | "HR"
@@ -89,7 +94,10 @@ mac=> SELECT Employees.EmployeeID, Employees.FirstName, Employees.LastName, Depa
  9                    | "Chris"             | "Anderson"         | "Operations"
 (8 rows)
 
-mac=> SELECT Employees.EmployeeID, Employees.FirstName, Employees.LastName, Departments.DepartmentName FROM Employees LEFT JOIN Departments ON Employees.DepartmentID = Departments.DepartmentID;
+mac=> SELECT Employees.EmployeeID, Employees.FirstName, Employees.LastName, Departments.DepartmentName 
+      FROM Employees 
+      LEFT JOIN Departments 
+      ON Employees.DepartmentID = Departments.DepartmentID;
  employees.employeeid | employees.firstname | employees.lastname | departments.departmentname
 ----------------------+---------------------+--------------------+----------------------------
  1                    | "John"              | "Doe"              | "HR"
@@ -104,7 +112,11 @@ mac=> SELECT Employees.EmployeeID, Employees.FirstName, Employees.LastName, Depa
  10                   | "Lisa"              | "Thomas"           | null
 (10 rows)
 
-mac=> SELECT Departments.DepartmentID, Departments.DepartmentName, Employees.EmployeeID, Employees.FirstName, Employees.LastName, Employees.Salary FROM Employees RIGHT JOIN Departments ON Employees.DepartmentID = Departments.DepartmentID ORDER BY Departments.DepartmentID, Employees.EmployeeID;
+mac=> SELECT Departments.DepartmentID, Departments.DepartmentName, Employees.EmployeeID, Employees.FirstName, Employees.LastName, Employees.Salary
+      FROM Employees
+      RIGHT JOIN Departments
+      ON Employees.DepartmentID = Departments.DepartmentID
+      ORDER BY Departments.DepartmentID, Employees.EmployeeID;
  departments.departmentid | departments.departmentname | employees.employeeid | employees.firstname | employees.lastname | employees.salary
 --------------------------+----------------------------+----------------------+---------------------+--------------------+------------------
  1                        | "HR"                       | 1                    | "John"              | "Doe"              | 60000
