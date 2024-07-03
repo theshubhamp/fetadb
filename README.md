@@ -3,6 +3,23 @@ FetaDB is a Work-In-Progress SQL Database backed by a KV store (Badger). It talk
 
 This is a small attempt to learn database internals!
 
+### Overall Architecture
+```mermaid
+graph TD;
+    client[Client: Anything that can speak PostgreSQL wire protocol]
+    handler[Protocol Handler]
+    pg_parser[Parser: PostgreSQL Parser]
+    ast_transform[Transformer: PostgreSQL Nodes to AST Nodes]
+    planner[Planner: AST Nodes to Planner Nodes]
+    execute[Execution: Planner Nodes evalauted bottom up to yield result]
+
+    client-->handler;
+    handler-->pg_parser;
+    pg_parser-->ast_transform;
+    ast_transform-->planner;
+    planner-->execute
+```
+
 #### Supported Datatypes
 Golang primitive types are supported: bool, string, unit*, int*, float*
 
