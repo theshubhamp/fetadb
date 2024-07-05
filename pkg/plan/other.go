@@ -28,7 +28,7 @@ type Result struct {
 
 func (r Result) Do(db *badger.DB) (*types.DataFrame, error) {
 	if r.Child == nil {
-		result := types.DataFrame{}
+		result := types.NewDataFrame()
 
 		columnID := uint64(0)
 		for _, target := range r.Targets {
@@ -44,14 +44,14 @@ func (r Result) Do(db *badger.DB) (*types.DataFrame, error) {
 			})
 		}
 
-		return &result, nil
+		return result, nil
 	} else {
 		childResult, err := r.Child.Do(db)
 		if err != nil {
 			return childResult, err
 		}
 
-		result := types.DataFrame{}
+		result := types.NewDataFrame()
 		numRows := childResult.RowCount()
 
 		columnID := uint64(0)
@@ -83,7 +83,7 @@ func (r Result) Do(db *badger.DB) (*types.DataFrame, error) {
 			}
 		}
 
-		return &result, nil
+		return result, nil
 	}
 }
 

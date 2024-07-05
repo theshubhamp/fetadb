@@ -25,23 +25,9 @@ func (n NestedJoin) Do(db *badger.DB) (*types.DataFrame, error) {
 		return nil, err
 	}
 
-	joinedResult := types.DataFrame{}
-	for _, column := range leftResult.Columns() {
-		joinedResult.AppendColumn(&types.Column{
-			ID:       column.ID,
-			TableRef: column.TableRef,
-			Name:     column.Name,
-			Items:    []any{},
-		})
-	}
-	for _, column := range rightResult.Columns() {
-		joinedResult.AppendColumn(&types.Column{
-			ID:       column.ID,
-			Name:     column.Name,
-			TableRef: column.TableRef,
-			Items:    []any{},
-		})
-	}
+	joinedResult := types.NewDataFrame()
+	joinedResult.IncludeColumns(leftResult)
+	joinedResult.IncludeColumns(rightResult)
 
 	joinedRightIndexes := map[uint64]bool{}
 	for leftIdx := range leftResult.RowCount() {
@@ -118,5 +104,5 @@ func (n NestedJoin) Do(db *badger.DB) (*types.DataFrame, error) {
 		}
 	}
 
-	return &joinedResult, nil
+	return joinedResult, nil
 }

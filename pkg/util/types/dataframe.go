@@ -114,9 +114,22 @@ func (c ColumnRef) Names() []string {
 	return c
 }
 
+func (c ColumnRef) String() string {
+	return strings.Join(c, ".")
+}
+
 type DataFrame struct {
-	columns []*Column
-	sort    *Sort
+	columns     []*Column
+	columnIndex map[string]int
+	sort        *Sort
+}
+
+func NewDataFrame() *DataFrame {
+	return &DataFrame{
+		columns:     []*Column{},
+		columnIndex: map[string]int{},
+		sort:        nil,
+	}
 }
 
 func (df *DataFrame) Columns() []*Column {
@@ -129,12 +142,31 @@ func (df *DataFrame) GetColumn(ref ColumnRef) *Column {
 			return column
 		}
 	}
+	index, ok := df.columnIndex[ref.String()]
+	if !ok || len(df.columns) < index {
+		return nil
+	}
 
-	return nil
+	return df.columns[index]
 }
 
 func (df *DataFrame) AppendColumn(column *Column) {
+	columnRef := fmt.Sprintf("%v.%v", column.TableRef, column.Name)
+
 	df.columns = append(df.columns, column)
+	appendIndex := len(df.columns) - 1
+	df.columnIndex[columnRef] = appendIndex
+}
+
+func (df *DataFrame) IncludeColumns(other *DataFrame) {
+	for _, column := range other.columns {
+		df.AppendColumn(&Column{
+			ID:       column.ID,
+			TableRef: column.TableRef,
+			Name:     column.Name,
+			Items:    []any{},
+		})
+	}
 }
 
 func (df *DataFrame) Sort(s Sort) {

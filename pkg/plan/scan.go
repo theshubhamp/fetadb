@@ -30,9 +30,9 @@ func (s SeqScan) Do(db *badger.DB) (*types.DataFrame, error) {
 		}
 	}
 
-	results := types.DataFrame{}
+	results := types.NewDataFrame()
 
-	return &results, db.View(func(txn *badger.Txn) error {
+	return results, db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
 
