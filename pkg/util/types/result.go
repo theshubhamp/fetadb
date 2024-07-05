@@ -2,11 +2,12 @@ package types
 
 import (
 	"encoding/json"
+	"fetadb/pkg/util/types/dataframe"
 	"fmt"
 	pgx "github.com/jackc/pgx/v5/pgproto3"
 )
 
-func ToRowDescription(dataframe *DataFrame) *pgx.RowDescription {
+func ToRowDescription(dataframe *dataframe.DataFrame) *pgx.RowDescription {
 	fields := []pgx.FieldDescription{}
 
 	if dataframe == nil {
@@ -16,7 +17,7 @@ func ToRowDescription(dataframe *DataFrame) *pgx.RowDescription {
 	}
 
 	columnId := 0
-	for _, column := range dataframe.columns {
+	for _, column := range dataframe.Columns() {
 		columnName := ""
 		if column.Name != "" {
 			columnName = column.Name
@@ -36,7 +37,7 @@ func ToRowDescription(dataframe *DataFrame) *pgx.RowDescription {
 	}
 }
 
-func ToDataRows(dataframe *DataFrame) []pgx.DataRow {
+func ToDataRows(dataframe *dataframe.DataFrame) []pgx.DataRow {
 	if dataframe == nil {
 		return []pgx.DataRow{}
 	}
@@ -49,7 +50,7 @@ func ToDataRows(dataframe *DataFrame) []pgx.DataRow {
 	for idxRow := range numRows {
 		columns := [][]byte{}
 		for idxCol := range numCols {
-			marshalled, _ := json.Marshal(dataframe.columns[idxCol].Items[idxRow])
+			marshalled, _ := json.Marshal(dataframe.GetColumn(idxCol).Get(idxRow))
 			columns = append(columns, marshalled)
 		}
 		rows = append(rows, pgx.DataRow{Values: columns})

@@ -1,9 +1,7 @@
-package types
+package dataframe
 
 import (
-	"cmp"
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
 )
@@ -17,50 +15,36 @@ type Column struct {
 	ID       uint64
 	Name     string
 	TableRef string
-	Items    []any
+	items    Array
 }
 
 func (c *Column) ColumnRef() ColumnRef {
 	return append(strings.Split(c.TableRef, "."), c.Name)
 }
 
+func (c *Column) Get(i int) any {
+	return c.items.Get(i)
+}
+
 func (c *Column) Append(val any) {
-	c.Items = append(c.Items, val)
+	if c.items == nil {
+		c.items = NewArray(val)
+		return
+	}
+
+	c.items.Append(val)
 }
 
 func (c *Column) Equals(i int, j int) bool {
-	return reflect.DeepEqual(c.Items[i], c.Items[j])
+	return c.items.Equals(i, j)
 }
 
 func (c *Column) Less(i int, j int) bool {
-	left := c.Items[i]
-	right := c.Items[j]
-
-	if left == nil {
-		return true
-	} else if right == nil {
-		return false
-	}
-
-	leftValue, leftOk := NewNumber(left)
-	rightValue, rightOk := NewNumber(right)
-	if !leftOk || !rightOk {
-		return cmp.Less(fmt.Sprintf("%v", left), fmt.Sprintf("%v", right))
-	}
-
-	if leftValue.IsFloat() || rightValue.IsFloat() {
-		return cmp.Less(leftValue.Float(), rightValue.Float())
-	} else if leftValue.IsUint() || rightValue.IsUint() {
-		return cmp.Less(leftValue.Uint(), rightValue.Uint())
-	} else if leftValue.IsInt() || rightValue.IsInt() {
-		return cmp.Less(leftValue.Int(), rightValue.Int())
-	}
-
-	return cmp.Less(fmt.Sprintf("%v", left), fmt.Sprintf("%v", right))
+	return c.items.Less(i, j)
 }
 
 func (c *Column) Swap(i int, j int) {
-	c.Items[i], c.Items[j] = c.Items[j], c.Items[i]
+	c.items.Swap(i, j)
 }
 
 type ColumnRef []string
@@ -136,7 +120,15 @@ func (df *DataFrame) Columns() []*Column {
 	return df.columns
 }
 
-func (df *DataFrame) GetColumn(ref ColumnRef) *Column {
+func (df *DataFrame) GetColumn(index int) *Column {
+	if len(df.columns) < index {
+		return nil
+	}
+
+	return df.columns[index]
+}
+
+func (df *DataFrame) GetColumnRef(ref ColumnRef) *Column {
 	for _, column := range df.columns {
 		if ref.TableRef() == column.TableRef && column.Name == ref.Column() {
 			return column
@@ -164,7 +156,7 @@ func (df *DataFrame) IncludeColumns(other *DataFrame) {
 			ID:       column.ID,
 			TableRef: column.TableRef,
 			Name:     column.Name,
-			Items:    []any{},
+			items:    column.items.New(),
 		})
 	}
 }
@@ -174,29 +166,29 @@ func (df *DataFrame) Sort(s Sort) {
 	sort.Sort(df)
 }
 
-func (df *DataFrame) RowCount() uint64 {
+func (df *DataFrame) RowCount() int {
 	if len(df.columns) == 0 {
 		return 0
 	}
 
-	return uint64(len(df.columns[0].Items))
+	return df.columns[0].items.Length()
 }
 
-func (df *DataFrame) ColCount() uint64 {
-	return uint64(len(df.columns))
+func (df *DataFrame) ColCount() int {
+	return len(df.columns)
 }
 
 func (df *DataFrame) Len() int {
-	return int(df.RowCount())
+	return df.RowCount()
 }
 
 func (df *DataFrame) Less(i int, j int) bool {
-	if reflect.ValueOf(df.sort).IsZero() {
+	if df.sort == nil {
 		return false
 	}
 
 	for idx, columnName := range df.sort.Columns {
-		column := df.GetColumn(NewColumnRef(columnName))
+		column := df.GetColumnRef(NewColumnRef(columnName))
 
 		if column.Equals(i, j) {
 			continue
@@ -214,7 +206,7 @@ func (df *DataFrame) Less(i int, j int) bool {
 }
 
 func (df *DataFrame) Swap(i int, j int) {
-	if reflect.ValueOf(df.sort).IsZero() {
+	if df.sort == nil {
 		return
 	}
 

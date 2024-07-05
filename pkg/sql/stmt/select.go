@@ -3,6 +3,7 @@ package stmt
 import (
 	"fetadb/pkg/sql/expr"
 	"fetadb/pkg/util/types"
+	"fetadb/pkg/util/types/dataframe"
 	"strings"
 )
 
@@ -60,5 +61,5 @@ type Target struct {
 
 type SortBy struct {
 	Ref   expr.ColumnRef
-	Order types.SortOrder
+	Order dataframe.SortOrder
 }

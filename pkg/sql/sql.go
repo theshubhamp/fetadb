@@ -5,6 +5,7 @@ import (
 	"fetadb/pkg/sql/stmt"
 	"fetadb/pkg/util"
 	"fetadb/pkg/util/types"
+	"fetadb/pkg/util/types/dataframe"
 	"fmt"
 	pg_query "github.com/pganalyze/pg_query_go/v5"
 	"reflect"
@@ -103,11 +104,11 @@ func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
 			return stmt.Select{}, err
 		}
 
-		order := types.SortAsc
+		order := dataframe.SortAsc
 		if sortByClause.SortbyDir == pg_query.SortByDir_SORTBY_ASC {
-			order = types.SortAsc
+			order = dataframe.SortAsc
 		} else if sortByClause.SortbyDir == pg_query.SortByDir_SORTBY_DESC {
-			order = types.SortDesc
+			order = dataframe.SortDesc
 		}
 
 		sortBy = append(sortBy, stmt.SortBy{Ref: columnRef.(expr.ColumnRef), Order: order})

@@ -1,10 +1,10 @@
 package plan
 
 import (
-	"fetadb/pkg/util/types"
+	"fetadb/pkg/util/types/dataframe"
 	"github.com/dgraph-io/badger/v4"
 )
 
 type Node interface {
-	Do(db *badger.DB) (*types.DataFrame, error)
+	Do(db *badger.DB) (*dataframe.DataFrame, error)
 }
