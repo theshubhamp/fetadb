@@ -13,7 +13,7 @@ type RowEvaluationContext struct {
 
 func (r RowEvaluationContext) LookupColumnRef(ref expr.ColumnRef) (any, error) {
 	for idx, df := range r.DFS {
-		for _, column := range df.Columns {
+		for _, column := range df.Columns() {
 			if column.TableRef == ref.TableRef() && column.Name == ref.Column() {
 				return column.Items[r.Rows[idx]], nil
 			}

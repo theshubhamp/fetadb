@@ -37,7 +37,7 @@ func (r Result) Do(db *badger.DB) (*types.DataFrame, error) {
 				return nil, err
 			}
 
-			result.Columns = append(result.Columns, &types.Column{
+			result.AppendColumn(&types.Column{
 				ID:    columnID,
 				Name:  target.Value.String(),
 				Items: []any{evaluated},
@@ -61,7 +61,7 @@ func (r Result) Do(db *badger.DB) (*types.DataFrame, error) {
 				currentColumnName = target.Value.String()
 			}
 
-			result.Columns = append(result.Columns, &types.Column{
+			result.AppendColumn(&types.Column{
 				ID:    columnID,
 				Name:  currentColumnName,
 				Items: []any{},
@@ -70,7 +70,7 @@ func (r Result) Do(db *badger.DB) (*types.DataFrame, error) {
 		}
 
 		for rowIdx := range numRows {
-			for colIdx, _ := range result.Columns {
+			for colIdx, column := range result.Columns() {
 				evaluated, err := r.Targets[colIdx].Value.Evaluate(RowEvaluationContext{
 					DFS:  []*types.DataFrame{childResult},
 					Rows: []uint64{rowIdx},
@@ -79,7 +79,7 @@ func (r Result) Do(db *badger.DB) (*types.DataFrame, error) {
 					return nil, err
 				}
 
-				result.Columns[colIdx].Items = append(result.Columns[colIdx].Items, evaluated)
+				column.Append(evaluated)
 			}
 		}
 

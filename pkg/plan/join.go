@@ -26,16 +26,16 @@ func (n NestedJoin) Do(db *badger.DB) (*types.DataFrame, error) {
 	}
 
 	joinedResult := types.DataFrame{}
-	for _, column := range leftResult.Columns {
-		joinedResult.Columns = append(joinedResult.Columns, &types.Column{
+	for _, column := range leftResult.Columns() {
+		joinedResult.AppendColumn(&types.Column{
 			ID:       column.ID,
 			TableRef: column.TableRef,
 			Name:     column.Name,
 			Items:    []any{},
 		})
 	}
-	for _, column := range rightResult.Columns {
-		joinedResult.Columns = append(joinedResult.Columns, &types.Column{
+	for _, column := range rightResult.Columns() {
+		joinedResult.AppendColumn(&types.Column{
 			ID:       column.ID,
 			Name:     column.Name,
 			TableRef: column.TableRef,
@@ -72,31 +72,31 @@ func (n NestedJoin) Do(db *badger.DB) (*types.DataFrame, error) {
 				continue
 			}
 
-			for _, leftColumn := range leftResult.Columns {
+			for _, leftColumn := range leftResult.Columns() {
 				joinedResult.GetColumn(leftColumn.ColumnRef()).Append(leftColumn.Items[leftIdx])
 			}
-			for _, rightColumn := range rightResult.Columns {
+			for _, rightColumn := range rightResult.Columns() {
 				joinedResult.GetColumn(rightColumn.ColumnRef()).Append(rightColumn.Items[joinedRightIdx])
 			}
 		} else if n.Type == types.JoinLeft {
-			for _, leftColumn := range leftResult.Columns {
+			for _, leftColumn := range leftResult.Columns() {
 				joinedResult.GetColumn(leftColumn.ColumnRef()).Append(leftColumn.Items[leftIdx])
 			}
 			if joined {
-				for _, rightColumn := range rightResult.Columns {
+				for _, rightColumn := range rightResult.Columns() {
 					joinedResult.GetColumn(rightColumn.ColumnRef()).Append(rightColumn.Items[joinedRightIdx])
 				}
 			} else {
-				for _, rightColumn := range rightResult.Columns {
+				for _, rightColumn := range rightResult.Columns() {
 					joinedResult.GetColumn(rightColumn.ColumnRef()).Append(nil)
 				}
 			}
 		} else if n.Type == types.JoinRight {
 			if joined {
-				for _, leftColumn := range leftResult.Columns {
+				for _, leftColumn := range leftResult.Columns() {
 					joinedResult.GetColumn(leftColumn.ColumnRef()).Append(leftColumn.Items[leftIdx])
 				}
-				for _, rightColumn := range rightResult.Columns {
+				for _, rightColumn := range rightResult.Columns() {
 					joinedResult.GetColumn(rightColumn.ColumnRef()).Append(rightColumn.Items[joinedRightIdx])
 				}
 			}
@@ -108,10 +108,10 @@ func (n NestedJoin) Do(db *badger.DB) (*types.DataFrame, error) {
 	if n.Type == types.JoinRight {
 		for rightIdx := range rightResult.RowCount() {
 			if _, ok := joinedRightIndexes[rightIdx]; !ok {
-				for _, leftColumn := range leftResult.Columns {
+				for _, leftColumn := range leftResult.Columns() {
 					joinedResult.GetColumn(leftColumn.ColumnRef()).Append(nil)
 				}
-				for _, rightColumn := range rightResult.Columns {
+				for _, rightColumn := range rightResult.Columns() {
 					joinedResult.GetColumn(rightColumn.ColumnRef()).Append(rightColumn.Items[rightIdx])
 				}
 			}

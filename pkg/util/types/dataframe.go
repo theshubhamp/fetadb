@@ -115,12 +115,16 @@ func (c ColumnRef) Names() []string {
 }
 
 type DataFrame struct {
-	Columns []*Column
+	columns []*Column
 	sort    *Sort
 }
 
+func (df *DataFrame) Columns() []*Column {
+	return df.columns
+}
+
 func (df *DataFrame) GetColumn(ref ColumnRef) *Column {
-	for _, column := range df.Columns {
+	for _, column := range df.columns {
 		if ref.TableRef() == column.TableRef && column.Name == ref.Column() {
 			return column
 		}
@@ -129,21 +133,25 @@ func (df *DataFrame) GetColumn(ref ColumnRef) *Column {
 	return nil
 }
 
+func (df *DataFrame) AppendColumn(column *Column) {
+	df.columns = append(df.columns, column)
+}
+
 func (df *DataFrame) Sort(s Sort) {
 	df.sort = &s
 	sort.Sort(df)
 }
 
 func (df *DataFrame) RowCount() uint64 {
-	if len(df.Columns) == 0 {
+	if len(df.columns) == 0 {
 		return 0
 	}
 
-	return uint64(len(df.Columns[0].Items))
+	return uint64(len(df.columns[0].Items))
 }
 
 func (df *DataFrame) ColCount() uint64 {
-	return uint64(len(df.Columns))
+	return uint64(len(df.columns))
 }
 
 func (df *DataFrame) Len() int {
@@ -178,7 +186,7 @@ func (df *DataFrame) Swap(i int, j int) {
 		return
 	}
 
-	for _, column := range df.Columns {
+	for _, column := range df.columns {
 		column.Swap(i, j)
 	}
 }
