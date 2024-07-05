@@ -28,6 +28,41 @@ func (c *Column) Append(val any) {
 	c.Items = append(c.Items, val)
 }
 
+func (c *Column) Equals(i int, j int) bool {
+	return reflect.DeepEqual(c.Items[i], c.Items[j])
+}
+
+func (c *Column) Less(i int, j int) bool {
+	left := c.Items[i]
+	right := c.Items[j]
+
+	if left == nil {
+		return true
+	} else if right == nil {
+		return false
+	}
+
+	leftValue, leftOk := NewNumber(left)
+	rightValue, rightOk := NewNumber(right)
+	if !leftOk || !rightOk {
+		return cmp.Less(fmt.Sprintf("%v", left), fmt.Sprintf("%v", right))
+	}
+
+	if leftValue.IsFloat() || rightValue.IsFloat() {
+		return cmp.Less(leftValue.Float(), rightValue.Float())
+	} else if leftValue.IsUint() || rightValue.IsUint() {
+		return cmp.Less(leftValue.Uint(), rightValue.Uint())
+	} else if leftValue.IsInt() || rightValue.IsInt() {
+		return cmp.Less(leftValue.Int(), rightValue.Int())
+	}
+
+	return cmp.Less(fmt.Sprintf("%v", left), fmt.Sprintf("%v", right))
+}
+
+func (c *Column) Swap(i int, j int) {
+	c.Items[i], c.Items[j] = c.Items[j], c.Items[i]
+}
+
 type ColumnRef []string
 
 func NewColumnRef(val string) ColumnRef {
@@ -123,14 +158,11 @@ func (df *DataFrame) Less(i int, j int) bool {
 	for idx, columnName := range df.sort.Columns {
 		column := df.GetColumn(NewColumnRef(columnName))
 
-		iValue := column.Items[i]
-		jValue := column.Items[j]
-
-		if reflect.DeepEqual(iValue, jValue) {
+		if column.Equals(i, j) {
 			continue
 		}
 
-		lessThan := less(iValue, jValue)
+		lessThan := column.Less(i, j)
 		if df.sort.Order[idx] == SortDesc {
 			return !lessThan
 		} else {
@@ -146,38 +178,7 @@ func (df *DataFrame) Swap(i int, j int) {
 		return
 	}
 
-	temp := []any{}
 	for _, column := range df.Columns {
-		temp = append(temp, column.Items[i])
+		column.Swap(i, j)
 	}
-	for idx, column := range df.Columns {
-		column.Items[i] = column.Items[j]
-		column.Items[j] = temp[idx]
-	}
-
-	return
-}
-
-func less(left any, right any) bool {
-	if left == nil {
-		return true
-	} else if right == nil {
-		return false
-	}
-
-	leftValue, leftOk := NewNumber(left)
-	rightValue, rightOk := NewNumber(right)
-	if !leftOk || !rightOk {
-		return cmp.Less(fmt.Sprintf("%v", left), fmt.Sprintf("%v", right))
-	}
-
-	if leftValue.IsFloat() || rightValue.IsFloat() {
-		return cmp.Less(leftValue.Float(), rightValue.Float())
-	} else if leftValue.IsUint() || rightValue.IsUint() {
-		return cmp.Less(leftValue.Uint(), rightValue.Uint())
-	} else if leftValue.IsInt() || rightValue.IsInt() {
-		return cmp.Less(leftValue.Int(), rightValue.Int())
-	}
-
-	return cmp.Less(fmt.Sprintf("%v", left), fmt.Sprintf("%v", right))
 }
