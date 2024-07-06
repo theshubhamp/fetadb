@@ -20,7 +20,7 @@ func ToRowDescription(dataframe *dataframe.DataFrame) *pgx.RowDescription {
 	for _, column := range dataframe.Columns() {
 		columnName := ""
 		if column.Name != "" {
-			columnName = column.Name
+			columnName = column.ColumnRef().String()
 		}
 		if columnName == "" {
 			columnName = fmt.Sprintf("res%v", columnId)

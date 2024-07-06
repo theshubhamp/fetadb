@@ -1,6 +1,7 @@
 package plan
 
 import (
+	"fetadb/pkg/sql/expr"
 	"fetadb/pkg/sql/stmt"
 	"fetadb/pkg/util/types/dataframe"
 	"fmt"
@@ -57,14 +58,21 @@ func (r Result) Do(db *badger.DB) (*dataframe.DataFrame, error) {
 
 		columnID := uint64(0)
 		for _, target := range r.Targets {
+			currentTableRef := ""
 			currentColumnName := target.Name
 			if target.Name == "" {
-				currentColumnName = target.Value.String()
+				if columnRef, ok := target.Value.(expr.ColumnRef); ok {
+					currentTableRef = columnRef.TableRef()
+					currentColumnName = columnRef.Column()
+				} else {
+					currentColumnName = target.Value.String()
+				}
 			}
 
 			result.AppendColumn(&dataframe.Column{
-				ID:   columnID,
-				Name: currentColumnName,
+				ID:       columnID,
+				TableRef: currentTableRef,
+				Name:     currentColumnName,
 			})
 			columnID++
 		}
