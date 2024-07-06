@@ -13,6 +13,7 @@ type Select struct {
 	Where   expr.Expression
 	Having  expr.Expression
 	SortBy  []SortBy
+	GroupBy []expr.ColumnRef
 }
 
 type Source interface {
@@ -55,8 +56,9 @@ func (j Join) sourceMarker() {
 }
 
 type Target struct {
-	Name  string
-	Value expr.Expression
+	Name             string
+	Value            expr.Expression
+	DefaultColumnRef dataframe.ColumnRef
 }
 
 type SortBy struct {

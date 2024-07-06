@@ -3,17 +3,12 @@ package plan
 import (
 	"fetadb/pkg/sql/expr"
 	"fetadb/pkg/sql/stmt"
+	"fetadb/pkg/util"
 	"fetadb/pkg/util/types/dataframe"
 	"fmt"
 	"github.com/dgraph-io/badger/v4"
+	"strings"
 )
-
-type Aggregate struct {
-}
-
-func (a Aggregate) Do(db *badger.DB) (*dataframe.DataFrame, error) {
-	return nil, fmt.Errorf("not implemented")
-}
 
 type Append struct {
 }
@@ -119,4 +114,72 @@ func (s Sort) Do(db *badger.DB) (*dataframe.DataFrame, error) {
 	childResult.Sort(spec)
 
 	return childResult, nil
+}
+
+type GroupBy struct {
+	Refs  []expr.ColumnRef
+	Child Node
+}
+
+func (g GroupBy) Do(db *badger.DB) (*dataframe.DataFrame, error) {
+	childResult, err := g.Child.Do(db)
+	if err != nil {
+		return nil, err
+	}
+
+	if childResult.ColCount() == 0 {
+		return childResult, nil
+	}
+
+	groupColumn := &dataframe.Column{
+		ID:       0,
+		TableRef: util.MetaColumnGroup.TableRef(),
+		Name:     util.MetaColumnGroup.Column(),
+	}
+
+	childResult.AppendColumn(groupColumn)
+
+	groups := map[string]int{}
+	lastGroup := -1
+	for idx := range childResult.RowCount() {
+		parts := make([]string, len(g.Refs))
+
+		for refIdx, columnRef := range g.Refs {
+			evaluated, err := columnRef.Evaluate(RowEvaluationContext{
+				DFS:  []*dataframe.DataFrame{childResult},
+				Rows: []int{idx},
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			parts[refIdx] = fmt.Sprintf("%v:%v", columnRef.String(), evaluated)
+		}
+
+		key := strings.Join(parts, "::")
+		group := -1
+		if existingGroup, found := groups[key]; !found {
+			lastGroup = lastGroup + 1
+			group = lastGroup
+			groups[key] = group
+		} else {
+			group = existingGroup
+		}
+
+		groupColumn.Append(group)
+	}
+
+	childResult.Sort(dataframe.Sort{
+		Columns: []string{util.MetaColumnGroup.String()},
+		Order:   []dataframe.SortOrder{dataframe.SortAsc},
+	})
+
+	return childResult, nil
+}
+
+type Aggregate struct {
+}
+
+func (a Aggregate) Do(db *badger.DB) (*dataframe.DataFrame, error) {
+	return nil, fmt.Errorf("not implemented")
 }

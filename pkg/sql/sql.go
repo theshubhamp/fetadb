@@ -40,20 +40,6 @@ func ToStatement(stmt *pg_query.RawStmt) (Statement, error) {
 }
 
 func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
-	targets := []stmt.Target{}
-	for _, targetItem := range selectStmt.GetTargetList() {
-		targetExpr, err := ToExpression(targetItem.GetResTarget().GetVal())
-		if err != nil {
-			return stmt.Select{}, err
-		}
-
-		target := stmt.Target{
-			Name:  targetItem.GetResTarget().GetName(),
-			Value: targetExpr,
-		}
-		targets = append(targets, target)
-	}
-
 	sources := []stmt.Source{}
 	for _, fromClause := range selectStmt.GetFromClause() {
 		source, err := ToSource(fromClause)
@@ -114,11 +100,53 @@ func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
 		sortBy = append(sortBy, stmt.SortBy{Ref: columnRef.(expr.ColumnRef), Order: order})
 	}
 
+	groupBy := []expr.ColumnRef{}
+	groupedColumns := map[string]bool{}
+	for _, groupClause := range selectStmt.GetGroupClause() {
+		groupColumn, err := ToExpression(groupClause)
+		if err != nil {
+			return stmt.Select{}, err
+		}
+		if _, ok := groupColumn.(expr.ColumnRef); !ok {
+			return stmt.Select{}, fmt.Errorf("expected grpup by to contain a column ref, found %v", reflect.TypeOf(groupClause.GetNode()))
+		}
+
+		groupBy = append(groupBy, groupColumn.(expr.ColumnRef))
+		groupedColumns[groupColumn.(expr.ColumnRef).String()] = true
+	}
+
+	targets := []stmt.Target{}
+	for _, targetItem := range selectStmt.GetTargetList() {
+		targetExpr, err := ToExpression(targetItem.GetResTarget().GetVal())
+		if err != nil {
+			return stmt.Select{}, err
+		}
+
+		target := stmt.Target{
+			Name:             targetItem.GetResTarget().GetName(),
+			Value:            targetExpr,
+			DefaultColumnRef: dataframe.NewColumnRef(fmt.Sprintf("%s.%s", util.TableEval, targetExpr.String())),
+		}
+
+		if len(groupBy) > 0 {
+			if columnRef, ok := targetExpr.(expr.ColumnRef); ok {
+				if columnRef.TableRef() != util.TableMeta {
+					if grouped, ok := groupedColumns[columnRef.String()]; !ok || !grouped {
+						return stmt.Select{}, fmt.Errorf("non grouped columns cannot be in target list: %v", columnRef)
+					}
+				}
+			}
+		}
+
+		targets = append(targets, target)
+	}
+
 	return stmt.Select{
 		Targets: targets,
 		Source:  source,
 		Where:   where,
 		SortBy:  sortBy,
+		GroupBy: groupBy,
 	}, nil
 }
 
