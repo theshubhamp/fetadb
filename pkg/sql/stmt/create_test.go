@@ -1,6 +1,7 @@
 package stmt
 
 import (
+	"fetadb/pkg/kv"
 	"github.com/dgraph-io/badger/v4"
 	"reflect"
 	"testing"
@@ -34,7 +35,7 @@ func TestCreateTable(t *testing.T) {
 	tx := db.NewTransaction(false)
 	defer tx.Discard()
 
-	_, err = tx.Get([]byte("test"))
+	_, err = tx.Get(kv.TableName("test"))
 	if err != nil {
 		t.Errorf("expected table key to be created: %v", err)
 		return
