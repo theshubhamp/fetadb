@@ -22,6 +22,11 @@ func Select(selectStatement stmt.Select) (Node, error) {
 			Refs:  selectStatement.GroupBy,
 			Child: preResultNode,
 		}
+
+		preResultNode = Aggregate{
+			Targets: selectStatement.Targets,
+			Child:   preResultNode,
+		}
 	}
 
 	if len(selectStatement.SortBy) > 0 {

@@ -122,10 +122,15 @@ func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
 			return stmt.Select{}, err
 		}
 
+		defaultColumnRef := dataframe.NewColumnRef(fmt.Sprintf("%s.%s", util.TableEval, targetExpr.String()))
+		if columnRef, ok := targetExpr.(expr.ColumnRef); ok {
+			defaultColumnRef = dataframe.ColumnRef(columnRef)
+		}
+
 		target := stmt.Target{
 			Name:             targetItem.GetResTarget().GetName(),
 			Value:            targetExpr,
-			DefaultColumnRef: dataframe.NewColumnRef(fmt.Sprintf("%s.%s", util.TableEval, targetExpr.String())),
+			DefaultColumnRef: defaultColumnRef,
 		}
 
 		if len(groupBy) > 0 {
@@ -263,7 +268,13 @@ func ToExpression(node *pg_query.Node) (expr.Expression, error) {
 			args = append(args, arg)
 		}
 
-		return expr.NewFuncCall(name, args)
+		if expr.HasFunc(name) {
+			return expr.NewFuncCall(name, args)
+		} else if expr.HasAgg(name) {
+			return expr.NewAggCall(name, args)
+		} else {
+			return nil, fmt.Errorf("func / agg %v not found", name)
+		}
 	}
 
 	return nil, fmt.Errorf("unspported node: %v", reflect.TypeOf(node.GetNode()))

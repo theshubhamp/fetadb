@@ -20,6 +20,11 @@ var functions = map[string]reflect.Value{
 	"md5":   reflect.ValueOf(Md5),
 }
 
+func HasFunc(name string) bool {
+	_, ok := functions[name]
+	return ok
+}
+
 func NewFuncCall(name string, args []Expression) (FuncCall, error) {
 	delegate, ok := functions[name]
 	if !ok {

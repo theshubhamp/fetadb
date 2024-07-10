@@ -147,6 +147,39 @@ mac=> SELECT Departments.DepartmentID, Departments.DepartmentName, Employees.Emp
  6                        | "Research"                 | null                 | null                | null               | null
 (9 rows)
 
+mac=> select Employees.DepartmentID, min(Employees.Salary) as minSalary from Employees GROUP BY Employees.DepartmentID;
+ employees.departmentid | minsalary
+------------------------+-----------
+ 1                      | 60000
+ 2                      | 72000
+ 3                      | 65000
+ 4                      | 68000
+ null                   | 55000
+ 5                      | 58000
+(6 rows)
+
+mac=> select Employees.DepartmentID, max(Employees.Salary) as maxSalary from Employees GROUP BY Employees.DepartmentID;
+ employees.departmentid | maxsalary
+------------------------+-----------
+ 1                      | 62000
+ 2                      | 75000
+ 3                      | 70000
+ 4                      | 68000
+ null                   | 59000
+ 5                      | 58000
+(6 rows)
+
+mac=> select Employees.DepartmentID, count() as count from Employees GROUP BY Employees.DepartmentID;
+ employees.departmentid | count
+------------------------+-------
+ 1                      | 2
+ 2                      | 2
+ 3                      | 2
+ 4                      | 1
+ null                   | 2
+ 5                      | 1
+(6 rows)
+
 ```
 
 ### References

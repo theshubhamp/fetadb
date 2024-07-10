@@ -53,33 +53,34 @@ func (r Result) Do(db *badger.DB) (*dataframe.DataFrame, error) {
 
 		columnID := uint64(0)
 		for _, target := range r.Targets {
-			currentTableRef := ""
-			currentColumnName := target.Name
-			if target.Name == "" {
-				if columnRef, ok := target.Value.(expr.ColumnRef); ok {
-					currentTableRef = columnRef.TableRef()
-					currentColumnName = columnRef.Column()
-				} else {
-					currentColumnName = target.Value.String()
-				}
+			columnRef := target.DefaultColumnRef
+			if target.Name != "" {
+				columnRef = dataframe.NewColumnRef(target.Name)
 			}
 
 			result.AppendColumn(&dataframe.Column{
 				ID:       columnID,
-				TableRef: currentTableRef,
-				Name:     currentColumnName,
+				TableRef: columnRef.TableRef(),
+				Name:     columnRef.Column(),
 			})
 			columnID++
 		}
 
 		for rowIdx := range numRows {
 			for colIdx, column := range result.Columns() {
-				evaluated, err := r.Targets[colIdx].Value.Evaluate(RowEvaluationContext{
-					DFS:  []*dataframe.DataFrame{childResult},
-					Rows: []int{rowIdx},
-				})
-				if err != nil {
-					return nil, err
+				columnRef := r.Targets[colIdx].DefaultColumnRef
+
+				var evaluated any
+				if precomputedColumn := childResult.GetColumnRef(columnRef); precomputedColumn != nil {
+					evaluated = precomputedColumn.Get(rowIdx)
+				} else {
+					evaluated, err = r.Targets[colIdx].Value.Evaluate(RowEvaluationContext{
+						DFS:  []*dataframe.DataFrame{childResult},
+						Rows: []int{rowIdx},
+					})
+					if err != nil {
+						return nil, err
+					}
 				}
 
 				column.Append(evaluated)
@@ -178,8 +179,90 @@ func (g GroupBy) Do(db *badger.DB) (*dataframe.DataFrame, error) {
 }
 
 type Aggregate struct {
+	Targets []stmt.Target
+	Child   Node
 }
 
 func (a Aggregate) Do(db *badger.DB) (*dataframe.DataFrame, error) {
-	return nil, fmt.Errorf("not implemented")
+	childResult, err := a.Child.Do(db)
+	if err != nil {
+		return nil, err
+	}
+
+	if childResult.RowCount() == 0 {
+		return childResult, nil
+	}
+
+	evaluatedColumns := []*dataframe.Column{}
+	for _, target := range a.Targets {
+		if _, ok := target.Value.(expr.AggCall); !ok {
+			continue
+		}
+
+		evaluatedColumns = append(evaluatedColumns, &dataframe.Column{
+			ID:       0,
+			Name:     target.DefaultColumnRef.Column(),
+			TableRef: target.DefaultColumnRef.TableRef(),
+		})
+	}
+
+	result := dataframe.NewDataFrame()
+	result.IncludeColumns(childResult)
+
+	columnGroup := childResult.GetColumnRef(util.MetaColumnGroup)
+	lastColumnGroup := columnGroup.Get(0)
+	lastRow := []any{}
+	lastGeneratedRow := []any{}
+	for row := range childResult.RowCount() {
+		currentColumnGroup := columnGroup.Get(row)
+
+		if lastColumnGroup != currentColumnGroup {
+			lastColumnGroup = currentColumnGroup
+			for col, cell := range lastRow {
+				result.GetColumn(col).Append(cell)
+			}
+			for col, cell := range lastGeneratedRow {
+				evaluatedColumns[col].Append(cell)
+			}
+			for _, target := range a.Targets {
+				if aggCall, ok := target.Value.(expr.AggCall); ok {
+					aggCall.Instance.Agg.Reset()
+				}
+			}
+		}
+
+		lastRow = []any{}
+		lastGeneratedRow = []any{}
+		for _, column := range childResult.Columns() {
+			lastRow = append(lastRow, column.Get(row))
+		}
+
+		for _, target := range a.Targets {
+			if _, ok := target.Value.(expr.AggCall); !ok {
+				continue
+			}
+
+			evaluated, err := target.Value.Evaluate(RowEvaluationContext{
+				DFS:  []*dataframe.DataFrame{childResult},
+				Rows: []int{row},
+			})
+			if err != nil {
+				return nil, err
+			}
+			lastGeneratedRow = append(lastGeneratedRow, evaluated)
+		}
+	}
+
+	for col, cell := range lastRow {
+		result.GetColumn(col).Append(cell)
+	}
+	for col, cell := range lastGeneratedRow {
+		evaluatedColumns[col].Append(cell)
+	}
+
+	for _, evaluatedColumn := range evaluatedColumns {
+		result.AppendColumn(evaluatedColumn)
+	}
+
+	return result, nil
 }

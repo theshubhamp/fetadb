@@ -19,7 +19,11 @@ type Column struct {
 }
 
 func (c *Column) ColumnRef() ColumnRef {
-	return append(strings.Split(c.TableRef, "."), c.Name)
+	if c.TableRef == "" {
+		return []string{c.Name}
+	} else {
+		return append(strings.Split(c.TableRef, "."), c.Name)
+	}
 }
 
 func (c *Column) Get(i int) any {

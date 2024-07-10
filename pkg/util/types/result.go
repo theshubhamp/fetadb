@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/json"
 	"fetadb/pkg/util/types/dataframe"
-	"fmt"
 	pgx "github.com/jackc/pgx/v5/pgproto3"
 )
 
@@ -16,19 +15,9 @@ func ToRowDescription(dataframe *dataframe.DataFrame) *pgx.RowDescription {
 		}
 	}
 
-	columnId := 0
 	for _, column := range dataframe.Columns() {
-		columnName := ""
-		if column.Name != "" {
-			columnName = column.ColumnRef().String()
-		}
-		if columnName == "" {
-			columnName = fmt.Sprintf("res%v", columnId)
-			columnId++
-		}
-
 		fields = append(fields, pgx.FieldDescription{
-			Name: []byte(columnName),
+			Name: []byte(column.ColumnRef().String()),
 		})
 	}
 
