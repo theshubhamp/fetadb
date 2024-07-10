@@ -15,15 +15,6 @@ type Expression interface {
 	String() string
 }
 
-type Equals struct {
-	Left  Expression
-	Right Expression
-}
-
-func (e Equals) String() string {
-	return fmt.Sprintf("%v = %v", e.Left.String(), e.Right.String())
-}
-
 type ColumnRef dataframe.ColumnRef
 
 func (c ColumnRef) Catalog() string {
