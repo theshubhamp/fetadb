@@ -34,11 +34,12 @@ Primary Key and Not-Null
 * Operator dispatch, supported `=`, `+`, `-`, `*`, `/` and `||`
 * Functions dispatch, supported `lower`, `upper`, `md5`
 * Sort (In-Memory)
+* Group By, supported aggregations `sum`, `min`, `max`, `count`
 
 #### Unsupported Features (Current)
 * Non-trivial select, create, insert
 * Scan Filter, Index Scan Filter
-* Join (Hash & Merge), Group By etc.
+* Join (Hash & Merge)
 * Secondary Indexes
 * Type Checking on Insert
 
@@ -178,6 +179,17 @@ mac=> select Employees.DepartmentID, count() as count from Employees GROUP BY Em
  4                      | 1
  null                   | 2
  5                      | 1
+(6 rows)
+
+mac=> select Employees.DepartmentID, sum(Employees.Salary) from Employees GROUP BY Employees.DepartmentID;
+ employees.departmentid | _eval_.sum(employees.salary)
+------------------------+------------------------------
+ 1                      | 122000
+ 2                      | 147000
+ 3                      | 135000
+ 4                      | 68000
+ null                   | 114000
+ 5                      | 58000
 (6 rows)
 
 ```

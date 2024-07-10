@@ -35,6 +35,10 @@ var aggregates = map[string]func() AggInstance{
 		agg := maximum{zero: true, max: 0}
 		return AggInstance{Delegate: reflect.ValueOf(agg.Consume), Agg: &agg}
 	},
+	"sum": func() AggInstance {
+		agg := sum{sum: 0}
+		return AggInstance{Delegate: reflect.ValueOf(agg.Consume), Agg: &agg}
+	},
 }
 
 func HasAgg(name string) bool {
@@ -156,4 +160,21 @@ func (m *maximum) Aggregate() any {
 func (m *maximum) Reset() {
 	m.max = 0
 	m.zero = true
+}
+
+type sum struct {
+	sum float64
+}
+
+func (s *sum) Consume(val any) {
+	num, _ := types.NewNumber(val)
+	s.sum = s.sum + num.Float()
+}
+
+func (s *sum) Aggregate() any {
+	return s.sum
+}
+
+func (s *sum) Reset() {
+	s.sum = 0
 }
