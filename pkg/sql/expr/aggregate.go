@@ -39,6 +39,10 @@ var aggregates = map[string]func() AggInstance{
 		agg := sum{sum: 0}
 		return AggInstance{Delegate: reflect.ValueOf(agg.Consume), Agg: &agg}
 	},
+	"avg": func() AggInstance {
+		agg := average{sum: 0, count: 0, zero: true}
+		return AggInstance{Delegate: reflect.ValueOf(agg.Consume), Agg: &agg}
+	},
 }
 
 func HasAgg(name string) bool {
@@ -177,4 +181,31 @@ func (s *sum) Aggregate() any {
 
 func (s *sum) Reset() {
 	s.sum = 0
+}
+
+type average struct {
+	sum   float64
+	count int64
+	zero  bool
+}
+
+func (a *average) Consume(val any) {
+	num, _ := types.NewNumber(val)
+	a.zero = false
+	a.sum = a.sum + num.Float()
+	a.count++
+}
+
+func (a *average) Aggregate() any {
+	if a.zero {
+		return 0
+	}
+
+	return a.sum / float64(a.count)
+}
+
+func (a *average) Reset() {
+	a.sum = 0
+	a.count = 0
+	a.zero = true
 }

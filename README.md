@@ -192,6 +192,17 @@ mac=> select Employees.DepartmentID, sum(Employees.Salary) from Employees GROUP 
  5                      | 58000
 (6 rows)
 
+mac=> select Employees.DepartmentID, avg(Employees.Salary) from Employees GROUP BY Employees.DepartmentID;
+ employees.departmentid | _eval_.avg(employees.salary)
+------------------------+------------------------------
+ 1                      | 61000
+ 2                      | 73500
+ 3                      | 67500
+ 4                      | 68000
+ null                   | 57000
+ 5                      | 58000
+(6 rows)
+
 ```
 
 ### References
