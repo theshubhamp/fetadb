@@ -203,6 +203,17 @@ mac=> select Employees.DepartmentID, avg(Employees.Salary) from Employees GROUP 
  5                      | 58000
 (6 rows)
 
+mac=> select Employees.DepartmentID, max(Employees.Salary) - min(Employees.Salary) from Employees GROUP BY Employees.DepartmentID;
+ employees.departmentid | _eval_.max(employees.salary) - min(employees.salary)
+------------------------+------------------------------------------------------
+ 1                      | 2000
+ 2                      | 3000
+ 3                      | 5000
+ 4                      | 0
+ null                   | 4000
+ 5                      | 0
+(6 rows)
+
 ```
 
 ### References

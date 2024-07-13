@@ -195,7 +195,7 @@ func (a Aggregate) Do(db *badger.DB) (*dataframe.DataFrame, error) {
 
 	evaluatedColumns := []*dataframe.Column{}
 	for _, target := range a.Targets {
-		if _, ok := target.Value.(expr.AggCall); !ok {
+		if !expr.ContainsAgg(target.Value) {
 			continue
 		}
 
@@ -225,9 +225,11 @@ func (a Aggregate) Do(db *badger.DB) (*dataframe.DataFrame, error) {
 				evaluatedColumns[col].Append(cell)
 			}
 			for _, target := range a.Targets {
-				if aggCall, ok := target.Value.(expr.AggCall); ok {
-					aggCall.Instance.Agg.Reset()
-				}
+				expr.Iter(target.Value, func(expression expr.Expression) {
+					if agg, ok := expression.(expr.AggCall); ok {
+						agg.Instance.Agg.Reset()
+					}
+				})
 			}
 		}
 
@@ -238,7 +240,7 @@ func (a Aggregate) Do(db *badger.DB) (*dataframe.DataFrame, error) {
 		}
 
 		for _, target := range a.Targets {
-			if _, ok := target.Value.(expr.AggCall); !ok {
+			if !expr.ContainsAgg(target.Value) {
 				continue
 			}
 
