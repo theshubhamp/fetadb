@@ -1,32 +1,23 @@
 package expr
 
 import (
-	"reflect"
+	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 )
+
+func TestHasFunc(t *testing.T) {
+	require.False(t, HasFunc("should_not_be_found"))
+}
 
 func TestFunctionCall(t *testing.T) {
 	testString := "ABCD"
 
 	funcCall, err := NewFuncCall("lower", []Expression{Literal{Value: testString}})
-	if err != nil {
-		t.Errorf("cannot create func call: %v", err)
-		return
-	}
+	require.Nil(t, err)
 
 	result, err := funcCall.Evaluate(nil)
-	if err != nil {
-		t.Errorf("cannot evaluate func call: %v", err)
-		return
-	}
-	if resultString, ok := result.(string); !ok {
-		t.Errorf("expected result to be string, got: %v", reflect.TypeOf(result).Kind())
-		return
-	} else {
-		if resultString != strings.ToLower(testString) {
-			t.Errorf("expected lowercase string, got: %v (!= %v)", resultString, strings.ToLower(testString))
-			return
-		}
-	}
+	require.Nil(t, err)
+	require.IsType(t, "", result)
+	require.Equal(t, strings.ToLower(testString), result)
 }
