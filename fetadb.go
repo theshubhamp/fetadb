@@ -8,7 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/dgraph-io/badger/v4"
-	pgx "github.com/jackc/pgx/v5/pgproto3"
+	pgproto "github.com/jackc/pgx/v5/pgproto3"
 	pgquery "github.com/pganalyze/pg_query_go/v5"
 	"log"
 	"net"
@@ -55,7 +55,7 @@ func main() {
 }
 
 func handleIncomingConnection(db *badger.DB, conn net.Conn) {
-	backend := pgx.NewBackend(conn, conn)
+	backend := pgproto.NewBackend(conn, conn)
 
 	msg, err := backend.ReceiveStartupMessage()
 	if err != nil {
@@ -64,7 +64,7 @@ func handleIncomingConnection(db *badger.DB, conn net.Conn) {
 	}
 	log.Printf("connection established from remote: %v", conn.RemoteAddr())
 
-	if _, ok := msg.(*pgx.SSLRequest); ok {
+	if _, ok := msg.(*pgproto.SSLRequest); ok {
 		// deny ssl request
 		_, err = conn.Write([]byte{'N'})
 		if err != nil {
@@ -78,17 +78,17 @@ func handleIncomingConnection(db *badger.DB, conn net.Conn) {
 			log.Printf("failed to accept connection: %v", err)
 			return
 		}
-	} else if _, ok := msg.(*pgx.StartupMessage); ok {
+	} else if _, ok := msg.(*pgproto.StartupMessage); ok {
 		// got startup message, ok to proceed.
 	} else {
 		log.Printf("unsupported startup hanshake: %T", msg)
 		return
 	}
 
-	backend.Send(&pgx.AuthenticationOk{})
-	backend.Send(&pgx.ParameterStatus{Name: "server_version", Value: "16.0"})
-	backend.Send(&pgx.BackendKeyData{ProcessID: 0, SecretKey: 0})
-	backend.Send(&pgx.ReadyForQuery{TxStatus: 'I'})
+	backend.Send(&pgproto.AuthenticationOk{})
+	backend.Send(&pgproto.ParameterStatus{Name: "server_version", Value: "16.0"})
+	backend.Send(&pgproto.BackendKeyData{ProcessID: 0, SecretKey: 0})
+	backend.Send(&pgproto.ReadyForQuery{TxStatus: 'I'})
 
 	err = backend.Flush()
 	if err != nil {
@@ -108,32 +108,32 @@ func handleIncomingConnection(db *badger.DB, conn net.Conn) {
 	}
 }
 
-func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage) {
+func handleMessage(db *badger.DB, backend *pgproto.Backend, msg pgproto.FrontendMessage) {
 	defer backend.Flush()
 
 	switch msg := msg.(type) {
-	case *pgx.Query:
+	case *pgproto.Query:
 		log.Printf("query: %v", msg.String)
 
 		parseResult, err := pgquery.Parse(msg.String)
 		if err != nil {
 			err := fmt.Errorf("cannot parse: %v", err)
-			backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+			backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
 		} else {
 			statements, err := sql.ToStatements(parseResult)
 			if err != nil {
 				err := fmt.Errorf("cannot convert pasre tree to ast: %v", err)
-				backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+				backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
 			} else {
 				statement := statements[0]
 				if selectStatement, ok := statement.(stmt.Select); ok {
 					planNode, err := plan.Select(selectStatement)
 					if err != nil {
-						backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+						backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
 					} else {
 						result, err := planNode.Do(db)
 						if err != nil {
-							backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+							backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
 						} else {
 							backend.Send(types.ToRowDescription(result))
 							for _, row := range types.ToDataRows(result) {
@@ -144,18 +144,18 @@ func handleMessage(db *badger.DB, backend *pgx.Backend, msg pgx.FrontendMessage)
 				} else if createStatement, ok := statement.(stmt.Create); ok {
 					err := stmt.CreateTable(db, createStatement)
 					if err != nil {
-						backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+						backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
 					}
 				} else if insertStatement, ok := statement.(stmt.Insert); ok {
 					err := stmt.InsertTable(db, insertStatement)
 					if err != nil {
-						backend.Send(&pgx.ErrorResponse{Message: err.Error()})
+						backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
 					}
 				}
 			}
 		}
 
-		backend.Send(&pgx.CommandComplete{})
-		backend.Send(&pgx.ReadyForQuery{TxStatus: 'I'})
+		backend.Send(&pgproto.CommandComplete{})
+		backend.Send(&pgproto.ReadyForQuery{TxStatus: 'I'})
 	}
 }
