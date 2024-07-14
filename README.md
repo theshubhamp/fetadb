@@ -216,6 +216,12 @@ mac=> select Employees.DepartmentID, max(Employees.Salary) - min(Employees.Salar
 
 ```
 
+### Code Coverage
+```shell
+go test ./...  -coverpkg=./... -coverprofile ./coverage.out
+go tool cover -func ./coverage.out
+```
+
 ### References
 - [MyRocks (Facebook's Storage Engine based on RocksDB) KV Encoding](https://github.com/facebook/mysql-5.6/wiki/MyRocks-record-format)
 - [CockroachDB KV Encoding (New)](https://github.com/cockroachdb/cockroach/blob/master/docs/tech-notes/encoding.md)
