@@ -198,7 +198,7 @@ func (a *average) Consume(val any) {
 
 func (a *average) Aggregate() any {
 	if a.zero {
-		return 0
+		return float64(0)
 	}
 
 	return a.sum / float64(a.count)
