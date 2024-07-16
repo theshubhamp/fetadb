@@ -1,6 +1,8 @@
 package expr
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
@@ -32,4 +34,32 @@ func TestFuncCallUpper(t *testing.T) {
 	require.Nil(t, err)
 	require.IsType(t, "", result)
 	require.Equal(t, strings.ToUpper(testString), result)
+}
+
+func TestFuncCallMd5(t *testing.T) {
+	testString := "abcd"
+
+	funcCall, err := NewFuncCall("md5", []Expression{Literal{Value: testString}})
+	require.Nil(t, err)
+
+	result, err := funcCall.Evaluate(nil)
+	require.Nil(t, err)
+	require.IsType(t, "", result)
+
+	hash := md5.Sum([]byte(testString))
+	require.Equal(t, hex.EncodeToString(hash[:]), result)
+}
+
+func TestFuncCallConcat(t *testing.T) {
+	left := "abcd"
+	right := "efgh"
+
+	funcCall, err := NewFuncCall("||", []Expression{Literal{Value: left}, Literal{Value: right}})
+	require.Nil(t, err)
+
+	result, err := funcCall.Evaluate(nil)
+	require.Nil(t, err)
+	require.IsType(t, "", result)
+
+	require.Equal(t, strings.Join([]string{left, right}, ""), result)
 }
