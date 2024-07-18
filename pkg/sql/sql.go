@@ -291,7 +291,8 @@ func ToCreate(createStatement *pg_query.CreateStmt) (stmt.Create, error) {
 	columnDefs := []stmt.ColumnDef{}
 	primaryColumn := ""
 	for _, tableElts := range createStatement.GetTableElts() {
-		columnKind, err := util.LookupKind(tableElts.GetColumnDef().GetTypeName().GetNames()[0].GetString_().GetSval())
+		columnTypeNames := tableElts.GetColumnDef().GetTypeName().GetNames()
+		columnKind, err := util.LookupKind(columnTypeNames[len(columnTypeNames)-1].GetString_().GetSval())
 		if err != nil {
 			return stmt.Create{}, err
 		}
