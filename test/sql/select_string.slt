@@ -1,0 +1,29 @@
+# name: test/sql/select_string.slt
+# description: string operators, functions
+# group: [select]
+
+query T
+SELECT 'Hello World!'
+----
+"Hello World!"
+
+query T
+SELECT upper('upper')
+----
+"UPPER"
+
+query T
+SELECT lower('LOWER')
+----
+"lower"
+
+query T
+SELECT 'Hello' || 'World' || 'Again!'
+----
+"HelloWorldAgain!"
+
+query T
+SELECT md5('hello world')
+----
+"5eb63bbbe01eeed093cb22bb8f5acdc3"
+

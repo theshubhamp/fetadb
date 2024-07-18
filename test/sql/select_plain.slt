@@ -1,8 +1,0 @@
-# name: test/sql/basic.slt
-# description: basic select tests
-# group: [select]
-
-query I
-SELECT 1
-----
-1

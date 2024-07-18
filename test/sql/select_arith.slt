@@ -1,0 +1,33 @@
+# name: test/sql/select_arith.slt
+# description: arithmetic tests
+# group: [select]
+
+query I
+SELECT 1
+----
+1
+
+query I
+SELECT 1+2
+----
+3
+
+query I
+SELECT 1-2
+----
+-1
+
+query I
+SELECT 2*3
+----
+6
+
+query I
+SELECT 1/2
+----
+0
+
+query R
+SELECT 1/2.0
+----
+0.5
