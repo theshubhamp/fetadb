@@ -43,8 +43,8 @@ func Select(selectStatement stmt.Select) (Node, error) {
 }
 
 func Source(source stmt.Source) (Node, error) {
-	if from, ok := source.(stmt.From); ok {
-		return SeqScan{TableRef: from.TableRef()}, nil
+	if table, ok := source.(stmt.Table); ok {
+		return SeqScan{TableRef: table.TableRef()}, nil
 	} else if join, ok := source.(stmt.Join); ok {
 		leftSource, err := Source(join.Left)
 		if err != nil {

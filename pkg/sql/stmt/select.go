@@ -20,29 +20,29 @@ type Source interface {
 	sourceMarker()
 }
 
-type From struct {
+type Table struct {
 	Catalog string
 	Schema  string
 	Rel     string
 	Alias   string
 }
 
-func (f From) TableRef() string {
+func (t Table) TableRef() string {
 	ref := []string{}
-	if f.Catalog != "" {
-		ref = append(ref, f.Catalog)
+	if t.Catalog != "" {
+		ref = append(ref, t.Catalog)
 	}
-	if f.Schema != "" {
-		ref = append(ref, f.Schema)
+	if t.Schema != "" {
+		ref = append(ref, t.Schema)
 	}
-	if f.Rel != "" {
-		ref = append(ref, f.Rel)
+	if t.Rel != "" {
+		ref = append(ref, t.Rel)
 	}
 
 	return strings.Join(ref, ".")
 }
 
-func (f From) sourceMarker() {
+func (t Table) sourceMarker() {
 }
 
 type Join struct {

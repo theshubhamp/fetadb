@@ -157,7 +157,7 @@ func ToSelect(selectStmt *pg_query.SelectStmt) (stmt.Select, error) {
 
 func ToSource(node *pg_query.Node) (stmt.Source, error) {
 	if node.GetRangeVar() != nil {
-		return stmt.From{
+		return stmt.Table{
 			Catalog: node.GetRangeVar().GetCatalogname(),
 			Schema:  node.GetRangeVar().GetSchemaname(),
 			Rel:     node.GetRangeVar().GetRelname(),
@@ -200,7 +200,7 @@ func ToSource(node *pg_query.Node) (stmt.Source, error) {
 			Right:     right,
 		}, nil
 	} else {
-		return nil, fmt.Errorf("souce / from clause %v not supported", reflect.TypeOf(node.GetNode()))
+		return nil, fmt.Errorf("source clause %v not supported", reflect.TypeOf(node.GetNode()))
 	}
 }
 
