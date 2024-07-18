@@ -222,6 +222,22 @@ go test ./...  -coverpkg=./... -coverprofile ./coverage.out
 go tool cover -func ./coverage.out
 ```
 
+### SQL Logic Test
+See [sqllogictest](https://www.sqlite.org/sqllogictest/doc/trunk/about.wiki)
+
+Sqllogictest is a program designed to verify that an SQL database engine computes correct results by comparing the results to identical queries from other SQL database engines.
+
+Setup 
+```shell
+rustup update stable
+cargo install sqllogictest-bin
+```
+
+Tests are run via go automatically. Alternatively they can be run manually:
+```shell
+sqllogictest './test/**/*.slt'
+```
+
 ### References
 - [MyRocks (Facebook's Storage Engine based on RocksDB) KV Encoding](https://github.com/facebook/mysql-5.6/wiki/MyRocks-record-format)
 - [CockroachDB KV Encoding (New)](https://github.com/cockroachdb/cockroach/blob/master/docs/tech-notes/encoding.md)
