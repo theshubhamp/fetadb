@@ -21,7 +21,7 @@ graph TD;
 ```
 
 #### Supported Datatypes
-Golang primitive types are supported: bool, string, unit*, int*, float*
+Golang primitive types are supported but not enforced: bool, string, unit*, int*, float*
 
 #### Supported Column Constraints
 Primary Key and Not-Null
@@ -54,7 +54,35 @@ brew install libpq
 go run fetadb
 ```
 
-#### Connect via Client
+### Code Coverage
+```shell
+go test ./...  -coverpkg=./... -coverprofile ./coverage.out
+go tool cover -func ./coverage.out
+```
+
+### SQL Logic Test (included in go tests & coverage)
+See [sqllogictest](https://www.sqlite.org/sqllogictest/doc/trunk/about.wiki)
+
+Sqllogictest is a program designed to verify that an SQL database engine computes correct results by comparing the results to identical queries from other SQL database engines.
+
+Setup
+```shell
+rustup update stable
+cargo install sqllogictest-bin
+```
+
+Tests are run via go automatically. Alternatively they can be run manually:
+```shell
+sqllogictest './test/**/*.slt'
+```
+
+### References
+- [MyRocks (Facebook's Storage Engine based on RocksDB) KV Encoding](https://github.com/facebook/mysql-5.6/wiki/MyRocks-record-format)
+- [CockroachDB KV Encoding (New)](https://github.com/cockroachdb/cockroach/blob/master/docs/tech-notes/encoding.md)
+- [CockroachDB KV Encoding (Old)](https://www.cockroachlabs.com/blog/sql-in-cockroachdb-mapping-table-data-to-key-value-storage/)
+- [PostgreSQL Frontend/Backend Protocol](https://www.postgresql.org/docs/current/protocol.html)
+
+### Connect via Client
 ```shell
 # /usr/local/opt/libpq/bin/psql -h localhost
 psql (16.3, server 16.0)
@@ -215,31 +243,3 @@ mac=> select Employees.DepartmentID, max(Employees.Salary) - min(Employees.Salar
 (6 rows)
 
 ```
-
-### Code Coverage
-```shell
-go test ./...  -coverpkg=./... -coverprofile ./coverage.out
-go tool cover -func ./coverage.out
-```
-
-### SQL Logic Test
-See [sqllogictest](https://www.sqlite.org/sqllogictest/doc/trunk/about.wiki)
-
-Sqllogictest is a program designed to verify that an SQL database engine computes correct results by comparing the results to identical queries from other SQL database engines.
-
-Setup 
-```shell
-rustup update stable
-cargo install sqllogictest-bin
-```
-
-Tests are run via go automatically. Alternatively they can be run manually:
-```shell
-sqllogictest './test/**/*.slt'
-```
-
-### References
-- [MyRocks (Facebook's Storage Engine based on RocksDB) KV Encoding](https://github.com/facebook/mysql-5.6/wiki/MyRocks-record-format)
-- [CockroachDB KV Encoding (New)](https://github.com/cockroachdb/cockroach/blob/master/docs/tech-notes/encoding.md)
-- [CockroachDB KV Encoding (Old)](https://www.cockroachlabs.com/blog/sql-in-cockroachdb-mapping-table-data-to-key-value-storage/)
-- [PostgreSQL Frontend/Backend Protocol](https://www.postgresql.org/docs/current/protocol.html)
