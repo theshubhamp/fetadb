@@ -160,22 +160,22 @@ func handleMessage(db *badger.DB, backend *pgproto.Backend, msg pgproto.Frontend
 		parseResult, err := pgquery.Parse(msg.String)
 		if err != nil {
 			err := fmt.Errorf("cannot parse: %v", err)
-			backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
+			backend.Send(newErrorResponse(err))
 		} else {
 			statements, err := sql.ToStatements(parseResult)
 			if err != nil {
 				err := fmt.Errorf("cannot convert pasre tree to ast: %v", err)
-				backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
+				backend.Send(newErrorResponse(err))
 			} else {
 				statement := statements[0]
 				if selectStatement, ok := statement.(stmt.Select); ok {
 					planNode, err := plan.Select(selectStatement)
 					if err != nil {
-						backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
+						backend.Send(newErrorResponse(err))
 					} else {
 						result, err := planNode.Do(db)
 						if err != nil {
-							backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
+							backend.Send(newErrorResponse(err))
 						} else {
 							backend.Send(types.ToRowDescription(result))
 							for _, row := range types.ToDataRows(result) {
@@ -186,12 +186,12 @@ func handleMessage(db *badger.DB, backend *pgproto.Backend, msg pgproto.Frontend
 				} else if createStatement, ok := statement.(stmt.Create); ok {
 					err := stmt.CreateTable(db, createStatement)
 					if err != nil {
-						backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
+						backend.Send(newErrorResponse(err))
 					}
 				} else if insertStatement, ok := statement.(stmt.Insert); ok {
 					err := stmt.InsertTable(db, insertStatement)
 					if err != nil {
-						backend.Send(&pgproto.ErrorResponse{Message: err.Error()})
+						backend.Send(newErrorResponse(err))
 					}
 				}
 			}
@@ -200,4 +200,8 @@ func handleMessage(db *badger.DB, backend *pgproto.Backend, msg pgproto.Frontend
 		backend.Send(&pgproto.CommandComplete{})
 		backend.Send(&pgproto.ReadyForQuery{TxStatus: 'I'})
 	}
+}
+
+func newErrorResponse(err error) *pgproto.ErrorResponse {
+	return &pgproto.ErrorResponse{Severity: "ERROR", Code: "XX000", Message: err.Error()}
 }
