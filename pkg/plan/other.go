@@ -91,6 +91,48 @@ func (r Result) Do(db *badger.DB) (*dataframe.DataFrame, error) {
 	}
 }
 
+type Filter struct {
+	Where expr.Expression
+	Child Node
+}
+
+func (f Filter) Do(db *badger.DB) (*dataframe.DataFrame, error) {
+	childResult, err := f.Child.Do(db)
+	if err != nil {
+		return childResult, err
+	}
+
+	result := dataframe.NewDataFrame()
+	result.IncludeColumns(childResult)
+
+	for idx := range childResult.RowCount() {
+		evaluated, err := f.Where.Evaluate(RowEvaluationContext{
+			DFS:  []*dataframe.DataFrame{childResult},
+			Rows: []int{idx},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		includeRow := false
+		if evaluatedBool, ok := evaluated.(bool); ok {
+			includeRow = evaluatedBool
+		} else {
+			includeRow = true
+		}
+
+		if !includeRow {
+			continue
+		}
+
+		for _, column := range childResult.Columns() {
+			result.GetColumnRef(column.ColumnRef()).Append(column.Get(idx))
+		}
+	}
+
+	return result, nil
+}
+
 type Sort struct {
 	SortBy []stmt.SortBy
 	Child  Node

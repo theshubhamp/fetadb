@@ -39,6 +39,14 @@ func (c *Column) Append(val any) {
 	c.items.Append(val)
 }
 
+func (c *Column) Length() int {
+	if c.items == nil {
+		return 0
+	}
+
+	return c.items.Length()
+}
+
 func (c *Column) Equals(i int, j int) bool {
 	return c.items.Equals(i, j)
 }
@@ -175,7 +183,7 @@ func (df *DataFrame) RowCount() int {
 		return 0
 	}
 
-	return df.columns[0].items.Length()
+	return df.columns[0].Length()
 }
 
 func (df *DataFrame) ColCount() int {

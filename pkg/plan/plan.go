@@ -17,6 +17,13 @@ func Select(selectStatement stmt.Select) (Node, error) {
 		preResultNode = source
 	}
 
+	if selectStatement.Where != nil {
+		preResultNode = Filter{
+			Where: selectStatement.Where,
+			Child: preResultNode,
+		}
+	}
+
 	if len(selectStatement.GroupBy) > 0 {
 		preResultNode = GroupBy{
 			Refs:  selectStatement.GroupBy,

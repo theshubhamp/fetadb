@@ -10,6 +10,12 @@ import (
 )
 
 func Eq(left any, right any) (bool, error) {
+	leftValue, leftOk := types.NewNumber(left)
+	rightValue, rightOk := types.NewNumber(right)
+	if leftOk || rightOk {
+		return leftValue.Float() == rightValue.Float(), nil
+	}
+
 	return reflect.DeepEqual(left, right), nil
 }
 
