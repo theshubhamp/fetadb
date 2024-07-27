@@ -10,6 +10,10 @@ import (
 
 var functions = map[string]reflect.Value{
 	"=":     reflect.ValueOf(Eq),
+	"<":     reflect.ValueOf(Lt),
+	"<=":    reflect.ValueOf(LtEq),
+	">":     reflect.ValueOf(Gt),
+	">=":    reflect.ValueOf(GtEq),
 	"+":     reflect.ValueOf(Add),
 	"-":     reflect.ValueOf(Subtract),
 	"*":     reflect.ValueOf(Multiply),

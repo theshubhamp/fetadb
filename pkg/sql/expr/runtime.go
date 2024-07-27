@@ -12,11 +12,51 @@ import (
 func Eq(left any, right any) (bool, error) {
 	leftValue, leftOk := types.NewNumber(left)
 	rightValue, rightOk := types.NewNumber(right)
-	if leftOk || rightOk {
+	if leftOk && rightOk {
 		return leftValue.Float() == rightValue.Float(), nil
 	}
 
 	return reflect.DeepEqual(left, right), nil
+}
+
+func Lt(left any, right any) (bool, error) {
+	leftValue, leftOk := types.NewNumber(left)
+	rightValue, rightOk := types.NewNumber(right)
+	if leftOk && rightOk {
+		return leftValue.Float() < rightValue.Float(), nil
+	}
+
+	return false, fmt.Errorf("left %v and right %v expected to be numbers", left, right)
+}
+
+func LtEq(left any, right any) (bool, error) {
+	leftValue, leftOk := types.NewNumber(left)
+	rightValue, rightOk := types.NewNumber(right)
+	if leftOk && rightOk {
+		return leftValue.Float() <= rightValue.Float(), nil
+	}
+
+	return false, fmt.Errorf("left %v and right %v expected to be numbers", left, right)
+}
+
+func Gt(left any, right any) (bool, error) {
+	leftValue, leftOk := types.NewNumber(left)
+	rightValue, rightOk := types.NewNumber(right)
+	if leftOk && rightOk {
+		return leftValue.Float() > rightValue.Float(), nil
+	}
+
+	return false, fmt.Errorf("left %v and right %v expected to be numbers", left, right)
+}
+
+func GtEq(left any, right any) (bool, error) {
+	leftValue, leftOk := types.NewNumber(left)
+	rightValue, rightOk := types.NewNumber(right)
+	if leftOk && rightOk {
+		return leftValue.Float() >= rightValue.Float(), nil
+	}
+
+	return false, fmt.Errorf("left %v and right %v expected to be numbers", left, right)
 }
 
 func Add(left any, right any) (any, error) {

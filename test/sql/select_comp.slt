@@ -1,0 +1,36 @@
+# name: test/sql/select_comp.slt
+# description: comparison tests
+# group: [select]
+
+query T
+SELECT 1<2
+----
+true
+
+query T
+SELECT 2<1
+----
+false
+
+query T
+SELECT 1<=1
+----
+true
+
+query T
+SELECT 1>0
+----
+true
+
+query T
+SELECT 0>1
+----
+false
+
+query T
+SELECT 1>=1
+----
+true
+
+
+
