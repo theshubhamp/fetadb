@@ -1,0 +1,86 @@
+# name: test/sql/select_agg.slt
+# description: agg tests
+# group: [select]
+
+statement ok
+CREATE TABLE Departments__002(DepartmentID bigint PRIMARY KEY, DepartmentName string NOT NULL);
+
+statement ok
+CREATE TABLE Employees__002(EmployeeID bigint PRIMARY KEY, FirstName string NOT NULL, LastName string NOT NULL, DepartmentID bigint, Salary real);
+
+statement ok
+INSERT INTO Departments__002(DepartmentID, DepartmentName)
+      VALUES (1, 'HR'), (2, 'IT'), (3, 'Finance'), (4, 'Marketing'), (5, 'Operations'), (6, 'Research');
+
+statement ok
+INSERT INTO Employees__002(EmployeeID, FirstName, LastName, DepartmentID, Salary)
+      VALUES  (1, 'John', 'Doe', 1, 60000),
+              (2, 'Jane', 'Smith', 2, 75000),
+              (3, 'Mike', 'Johnson', 3, 65000),
+              (4, 'Emily', 'Brown', 2, 72000),
+              (5, 'David', 'Lee', 4, 68000),
+              (6, 'Sarah', 'Wilson', 1, 62000),
+              (7, 'Tom', 'Davis', NULL, 55000),
+              (8, 'Anna', 'Taylor', 3, 70000),
+              (9, 'Chris', 'Anderson', 5, 58000),
+              (10, 'Lisa', 'Thomas', NULL, 59000);
+
+query II
+select Employees__002.DepartmentID, min(Employees__002.Salary) as minSalary from Employees__002 GROUP BY Employees__002.DepartmentID;
+----
+1 60000
+2 72000
+3 65000
+4 68000
+null 55000
+5 58000
+
+query II
+select Employees__002.DepartmentID, max(Employees__002.Salary) as maxSalary from Employees__002 GROUP BY Employees__002.DepartmentID;
+----
+1 62000
+2 75000
+3 70000
+4 68000
+null 59000
+5 58000
+
+query II
+select Employees__002.DepartmentID, count() as count from Employees__002 GROUP BY Employees__002.DepartmentID;
+----
+1 2
+2 2
+3 2
+4 1
+null 2
+5 1
+
+query II
+select Employees__002.DepartmentID, sum(Employees__002.Salary) from Employees__002 GROUP BY Employees__002.DepartmentID;
+----
+1 122000
+2 147000
+3 135000
+4 68000
+null 114000
+5 58000
+
+query II
+select Employees__002.DepartmentID, avg(Employees__002.Salary) from Employees__002 GROUP BY Employees__002.DepartmentID;
+----
+1 61000
+2 73500
+3 67500
+4 68000
+null 57000
+5 58000
+
+query II
+select Employees__002.DepartmentID, max(Employees__002.Salary) - min(Employees__002.Salary) from Employees__002 GROUP BY Employees__002.DepartmentID;
+----
+1 2000
+2 3000
+3 5000
+4 0
+null 4000
+5 0
