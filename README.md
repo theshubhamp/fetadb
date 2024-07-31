@@ -124,58 +124,6 @@ mac=> select Employees.EmployeeID, Employees.FirstName, Employees.LastName, Empl
  10                   | "Lisa"              | "Thomas"           | null                   | 59000
 (10 rows)
 
-mac=> SELECT Employees.EmployeeID, Employees.FirstName, Employees.LastName, Departments.DepartmentName
-      FROM Employees 
-      INNER JOIN Departments
-      ON Employees.DepartmentID = Departments.DepartmentID;
- employees.employeeid | employees.firstname | employees.lastname | departments.departmentname
-----------------------+---------------------+--------------------+----------------------------
- 1                    | "John"              | "Doe"              | "HR"
- 2                    | "Jane"              | "Smith"            | "IT"
- 3                    | "Mike"              | "Johnson"          | "Finance"
- 4                    | "Emily"             | "Brown"            | "IT"
- 5                    | "David"             | "Lee"              | "Marketing"
- 6                    | "Sarah"             | "Wilson"           | "HR"
- 8                    | "Anna"              | "Taylor"           | "Finance"
- 9                    | "Chris"             | "Anderson"         | "Operations"
-(8 rows)
-
-mac=> SELECT Employees.EmployeeID, Employees.FirstName, Employees.LastName, Departments.DepartmentName 
-      FROM Employees 
-      LEFT JOIN Departments 
-      ON Employees.DepartmentID = Departments.DepartmentID;
- employees.employeeid | employees.firstname | employees.lastname | departments.departmentname
-----------------------+---------------------+--------------------+----------------------------
- 1                    | "John"              | "Doe"              | "HR"
- 2                    | "Jane"              | "Smith"            | "IT"
- 3                    | "Mike"              | "Johnson"          | "Finance"
- 4                    | "Emily"             | "Brown"            | "IT"
- 5                    | "David"             | "Lee"              | "Marketing"
- 6                    | "Sarah"             | "Wilson"           | "HR"
- 7                    | "Tom"               | "Davis"            | null
- 8                    | "Anna"              | "Taylor"           | "Finance"
- 9                    | "Chris"             | "Anderson"         | "Operations"
- 10                   | "Lisa"              | "Thomas"           | null
-(10 rows)
-
-mac=> SELECT Departments.DepartmentID, Departments.DepartmentName, Employees.EmployeeID, Employees.FirstName, Employees.LastName, Employees.Salary
-      FROM Employees
-      RIGHT JOIN Departments
-      ON Employees.DepartmentID = Departments.DepartmentID
-      ORDER BY Departments.DepartmentID, Employees.EmployeeID;
- departments.departmentid | departments.departmentname | employees.employeeid | employees.firstname | employees.lastname | employees.salary
---------------------------+----------------------------+----------------------+---------------------+--------------------+------------------
- 1                        | "HR"                       | 1                    | "John"              | "Doe"              | 60000
- 1                        | "HR"                       | 6                    | "Sarah"             | "Wilson"           | 62000
- 2                        | "IT"                       | 2                    | "Jane"              | "Smith"            | 75000
- 2                        | "IT"                       | 4                    | "Emily"             | "Brown"            | 72000
- 3                        | "Finance"                  | 3                    | "Mike"              | "Johnson"          | 65000
- 3                        | "Finance"                  | 8                    | "Anna"              | "Taylor"           | 70000
- 4                        | "Marketing"                | 5                    | "David"             | "Lee"              | 68000
- 5                        | "Operations"               | 9                    | "Chris"             | "Anderson"         | 58000
- 6                        | "Research"                 | null                 | null                | null               | null
-(9 rows)
-
 mac=> select Employees.DepartmentID, min(Employees.Salary) as minSalary from Employees GROUP BY Employees.DepartmentID;
  employees.departmentid | minsalary
 ------------------------+-----------

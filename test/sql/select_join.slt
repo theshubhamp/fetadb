@@ -1,0 +1,75 @@
+# name: test/sql/select_join.slt
+# description: join tests
+# group: [select]
+
+statement ok
+CREATE TABLE Departments__001(DepartmentID bigint PRIMARY KEY, DepartmentName string NOT NULL);
+
+statement ok
+CREATE TABLE Employees__001(EmployeeID bigint PRIMARY KEY, FirstName string NOT NULL, LastName string NOT NULL, DepartmentID bigint, Salary real);
+
+statement ok
+INSERT INTO Departments__001(DepartmentID, DepartmentName)
+      VALUES (1, 'HR'), (2, 'IT'), (3, 'Finance'), (4, 'Marketing'), (5, 'Operations'), (6, 'Research');
+
+statement ok
+INSERT INTO Employees__001(EmployeeID, FirstName, LastName, DepartmentID, Salary)
+      VALUES  (1, 'John', 'Doe', 1, 60000),
+              (2, 'Jane', 'Smith', 2, 75000),
+              (3, 'Mike', 'Johnson', 3, 65000),
+              (4, 'Emily', 'Brown', 2, 72000),
+              (5, 'David', 'Lee', 4, 68000),
+              (6, 'Sarah', 'Wilson', 1, 62000),
+              (7, 'Tom', 'Davis', NULL, 55000),
+              (8, 'Anna', 'Taylor', 3, 70000),
+              (9, 'Chris', 'Anderson', 5, 58000),
+              (10, 'Lisa', 'Thomas', NULL, 59000);
+
+query ITTT
+SELECT Employees__001.EmployeeID, Employees__001.FirstName, Employees__001.LastName, Departments__001.DepartmentName
+      FROM Employees__001
+      INNER JOIN Departments__001
+      ON Employees__001.DepartmentID = Departments__001.DepartmentID;
+----
+1 "John" "Doe" "HR"
+2 "Jane" "Smith" "IT"
+3 "Mike" "Johnson" "Finance"
+4 "Emily" "Brown" "IT"
+5 "David" "Lee" "Marketing"
+6 "Sarah" "Wilson" "HR"
+8 "Anna" "Taylor" "Finance"
+9 "Chris" "Anderson" "Operations"
+
+query ITTT
+SELECT Employees__001.EmployeeID, Employees__001.FirstName, Employees__001.LastName, Departments__001.DepartmentName
+      FROM Employees__001
+      LEFT JOIN Departments__001
+      ON Employees__001.DepartmentID = Departments__001.DepartmentID;
+----
+ 1 "John" "Doe" "HR"
+ 2 "Jane" "Smith" "IT"
+ 3 "Mike" "Johnson" "Finance"
+ 4 "Emily" "Brown" "IT"
+ 5 "David" "Lee" "Marketing"
+ 6 "Sarah" "Wilson" "HR"
+ 7 "Tom"  "Davis" null
+ 8 "Anna" "Taylor" "Finance"
+ 9 "Chris" "Anderson" "Operations"
+ 10 "Lisa" "Thomas" null
+
+query ITITTI
+SELECT Departments__001.DepartmentID, Departments__001.DepartmentName, Employees__001.EmployeeID, Employees__001.FirstName, Employees__001.LastName, Employees__001.Salary
+      FROM Employees__001
+      RIGHT JOIN Departments__001
+      ON Employees__001.DepartmentID = Departments__001.DepartmentID
+      ORDER BY Departments__001.DepartmentID, Employees__001.EmployeeID;
+----
+1 "HR" 1 "John" "Doe" 60000
+1 "HR" 6 "Sarah" "Wilson" 62000
+2 "IT" 2 "Jane" "Smith" 75000
+2 "IT" 4 "Emily" "Brown" 72000
+3 "Finance" 3 "Mike" "Johnson" 65000
+3 "Finance" 8 "Anna" "Taylor" 70000
+4 "Marketing" 5 "David" "Lee" 68000
+5 "Operations" 9 "Chris" "Anderson" 58000
+6 "Research" null null null null
