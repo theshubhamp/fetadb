@@ -14,6 +14,8 @@ var functions = map[string]reflect.Value{
 	"<=":    reflect.ValueOf(LtEq),
 	">":     reflect.ValueOf(Gt),
 	">=":    reflect.ValueOf(GtEq),
+	"and":   reflect.ValueOf(LogicalAnd),
+	"or":    reflect.ValueOf(LogicalOr),
 	"+":     reflect.ValueOf(Add),
 	"-":     reflect.ValueOf(Subtract),
 	"*":     reflect.ValueOf(Multiply),
@@ -35,7 +37,7 @@ func NewFuncCall(name string, args []Expression) (FuncCall, error) {
 		return FuncCall{}, fmt.Errorf("function %v not found", name)
 	}
 
-	if len(args) != delegate.Type().NumIn() {
+	if !delegate.Type().IsVariadic() && len(args) != delegate.Type().NumIn() {
 		return FuncCall{}, fmt.Errorf("function %v requires %v args, got %v", name, delegate.Type().NumIn(), len(args))
 	}
 

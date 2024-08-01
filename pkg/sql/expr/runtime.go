@@ -59,6 +59,26 @@ func GtEq(left any, right any) (bool, error) {
 	return false, fmt.Errorf("left %v and right %v expected to be numbers", left, right)
 }
 
+func LogicalAnd(evals ...bool) bool {
+	for _, eval := range evals {
+		if !eval {
+			return false
+		}
+	}
+
+	return true
+}
+
+func LogicalOr(evals ...bool) bool {
+	for _, eval := range evals {
+		if eval {
+			return true
+		}
+	}
+
+	return false
+}
+
 func Add(left any, right any) (any, error) {
 	leftValue, leftOk := types.NewNumber(left)
 	rightValue, rightOk := types.NewNumber(right)

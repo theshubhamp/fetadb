@@ -38,3 +38,15 @@ select Employees__004.EmployeeID, Employees__004.FirstName, Employees__004.LastN
 2 "Jane" "Smith" 2 75000
 1 "John" "Doe" 1 60000
 6 "Sarah" "Wilson" 1 62000
+
+query ITTII
+select Employees__004.EmployeeID, Employees__004.FirstName, Employees__004.LastName, Employees__004.DepartmentID, Employees__004.Salary
+    FROM Employees__004
+    WHERE Employees__004.employeeid >= 1 and Employees__004.employeeid <= 3 or Employees__004.employeeid >= 7 and Employees__004.employeeid <= 9;
+----
+1 "John" "Doe" 1 60000
+2 "Jane" "Smith" 2 75000
+3 "Mike" "Johnson" 3 65000
+7 "Tom" "Davis" null 55000
+8 "Anna" "Taylor" 3 70000
+9 "Chris" "Anderson" 5 58000

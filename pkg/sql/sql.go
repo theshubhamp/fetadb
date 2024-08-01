@@ -256,6 +256,26 @@ func ToExpression(node *pg_query.Node) (expr.Expression, error) {
 
 			return expr.NewBinaryOperator(operator, leftExpr, rightExpr)
 		}
+	} else if node.GetBoolExpr() != nil {
+		boolExpr := node.GetBoolExpr()
+
+		args := []expr.Expression{}
+		for _, argNode := range boolExpr.GetArgs() {
+			arg, err := ToExpression(argNode)
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, arg)
+		}
+
+		switch boolExpr.GetBoolop() {
+		case pg_query.BoolExprType_AND_EXPR:
+			return expr.NewAndOperator(args)
+		case pg_query.BoolExprType_OR_EXPR:
+			return expr.NewOrOperator(args)
+		default:
+			return nil, fmt.Errorf("bool expr %v not supported", boolExpr.GetBoolop().String())
+		}
 	} else if node.GetFuncCall() != nil {
 		name := node.GetFuncCall().GetFuncname()[0].GetString_().GetSval()
 		args := []expr.Expression{}
