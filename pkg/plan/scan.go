@@ -20,7 +20,7 @@ func (s SeqScan) Do(db *badger.DB) (*dataframe.DataFrame, error) {
 		return nil, err
 	}
 
-	columns := map[uint64]*dataframe.Column{}
+	columns := map[int64]*dataframe.Column{}
 	for _, column := range table.Columns {
 		columns[column.ID] = &dataframe.Column{
 			ID:       column.ID,

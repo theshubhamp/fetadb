@@ -2,6 +2,7 @@ package kv
 
 import (
 	"encoding/binary"
+	"fetadb/pkg/kv/encoding"
 )
 
 var (
@@ -14,8 +15,8 @@ func TableName(val string) []byte {
 	return append([]byte{PrefixTableSpace}, val...)
 }
 
-func TableID(val uint64) []byte {
-	return binary.BigEndian.AppendUint64([]byte{PrefixTableSpace}, val)
+func TableID(val int64) []byte {
+	return binary.BigEndian.AppendUint64([]byte{PrefixTableSpace}, encoding.EncodeMemcmpInt64(val))
 }
 
 type DKey []byte
@@ -24,22 +25,22 @@ func NewDKey() DKey {
 	return DKey{}
 }
 
-func (k DKey) TableID(tableID uint64) DKey {
-	return binary.BigEndian.AppendUint64([]byte{PrefixData}, tableID)
+func (k DKey) TableID(tableID int64) DKey {
+	return binary.BigEndian.AppendUint64([]byte{PrefixData}, encoding.EncodeMemcmpInt64(tableID))
 }
 
-func (k DKey) IndexID(indexID uint64) DKey {
-	return binary.BigEndian.AppendUint64(k, indexID)
+func (k DKey) IndexID(indexID int64) DKey {
+	return binary.BigEndian.AppendUint64(k, encoding.EncodeMemcmpInt64(indexID))
 }
 
-func (k DKey) IndexValue(indexValue uint64) DKey {
-	return binary.BigEndian.AppendUint64(k, indexValue)
+func (k DKey) IndexValue(indexValue int64) DKey {
+	return binary.BigEndian.AppendUint64(k, encoding.EncodeMemcmpInt64(indexValue))
 }
 
-func (k DKey) ColumnID(columnID uint64) DKey {
-	return binary.BigEndian.AppendUint64(k, columnID)
+func (k DKey) ColumnID(columnID int64) DKey {
+	return binary.BigEndian.AppendUint64(k, encoding.EncodeMemcmpInt64(columnID))
 }
 
-func (k DKey) Decode() (uint64, uint64, uint64, uint64) {
-	return binary.BigEndian.Uint64(k[1:9]), binary.BigEndian.Uint64(k[9:17]), binary.BigEndian.Uint64(k[17:25]), binary.BigEndian.Uint64(k[25:33])
+func (k DKey) Decode() (int64, int64, int64, int64) {
+	return encoding.DecodeMemcmpInt64(k[1:9]), encoding.DecodeMemcmpInt64(k[9:17]), encoding.DecodeMemcmpInt64(k[17:25]), encoding.DecodeMemcmpInt64(k[25:33])
 }

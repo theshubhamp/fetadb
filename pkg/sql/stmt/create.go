@@ -37,10 +37,10 @@ func CreateTable(db *badger.DB, create Create) error {
 	}
 
 	columns := []dd.Column{}
-	columnId := 0
+	columnId := int64(0)
 	for _, columnDef := range create.Columns {
 		columns = append(columns, dd.Column{
-			ID:      uint64(columnId),
+			ID:      columnId,
 			Name:    columnDef.Name,
 			Type:    columnDef.Type,
 			Primary: columnDef.Primary,
@@ -54,10 +54,11 @@ func CreateTable(db *badger.DB, create Create) error {
 	return db.Update(func(txn *badger.Txn) error {
 		seq, err := db.GetSequence(kv.SeqTableID, 1)
 		defer seq.Release()
-		tableId, err := seq.Next()
+		generatedSeq, err := seq.Next()
 		if err != nil {
 			return err
 		}
+		tableId := int64(generatedSeq)
 
 		err = gob.NewEncoder(buffer).Encode(&dd.Table{
 			ID:      tableId,
@@ -83,7 +84,7 @@ func CreateTable(db *badger.DB, create Create) error {
 }
 
 func GetTableByName(db *badger.DB, name string) (dd.Table, error) {
-	tableId := uint64(1)
+	tableId := int64(1)
 
 	err := db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(kv.TableName(name))
@@ -92,9 +93,9 @@ func GetTableByName(db *badger.DB, name string) (dd.Table, error) {
 		}
 
 		return item.Value(func(val []byte) error {
-			id, ok := encoding.Decode(val).(uint64)
+			id, ok := encoding.Decode(val).(int64)
 			if !ok {
-				return fmt.Errorf("table not readable into uint64")
+				return fmt.Errorf("table not readable into int64")
 			}
 			tableId = id
 			return nil
@@ -107,7 +108,7 @@ func GetTableByName(db *badger.DB, name string) (dd.Table, error) {
 	return GetTableByID(db, tableId)
 }
 
-func GetTableByID(db *badger.DB, id uint64) (dd.Table, error) {
+func GetTableByID(db *badger.DB, id int64) (dd.Table, error) {
 	table := dd.Table{}
 
 	return table, db.View(func(txn *badger.Txn) error {

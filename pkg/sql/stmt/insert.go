@@ -70,10 +70,10 @@ func InsertTable(db *badger.DB, insert Insert) error {
 				return err
 			}
 
-			if !reflect.ValueOf(evaluatedIndexValue).CanConvert(reflect.TypeOf(uint64(1))) {
-				return fmt.Errorf("primary key value expected to be uint64, got %v", reflect.ValueOf(evaluatedIndexValue).Kind())
+			if !reflect.ValueOf(evaluatedIndexValue).CanConvert(reflect.TypeOf(int64(1))) {
+				return fmt.Errorf("primary key value expected to be int64, got %v", reflect.ValueOf(evaluatedIndexValue).Kind())
 			}
-			indexValue := reflect.ValueOf(evaluatedIndexValue).Convert(reflect.TypeOf(uint64(1))).Uint()
+			indexValue := reflect.ValueOf(evaluatedIndexValue).Convert(reflect.TypeOf(int64(1))).Int()
 
 			if !prefixEmpty(txn, kv.NewDKey().TableID(table.ID).IndexID(util.DefaultIndex).IndexValue(indexValue)) {
 				return fmt.Errorf("duplicate index value %v", indexValue)

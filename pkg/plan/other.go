@@ -26,7 +26,7 @@ func (r Result) Do(db *badger.DB) (*dataframe.DataFrame, error) {
 	if r.Child == nil {
 		result := dataframe.NewDataFrame()
 
-		columnID := uint64(0)
+		columnID := int64(0)
 		for _, target := range r.Targets {
 			evaluated, err := target.Value.Evaluate(nil)
 			if err != nil {
@@ -51,7 +51,7 @@ func (r Result) Do(db *badger.DB) (*dataframe.DataFrame, error) {
 		result := dataframe.NewDataFrame()
 		numRows := childResult.RowCount()
 
-		columnID := uint64(0)
+		columnID := int64(0)
 		for _, target := range r.Targets {
 			columnRef := target.DefaultColumnRef
 			if target.Name != "" {

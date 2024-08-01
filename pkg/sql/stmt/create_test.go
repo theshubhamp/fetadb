@@ -57,7 +57,7 @@ func TestGetTable(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "test", table.Name)
 	require.Len(t, table.Columns, 1)
-	require.Equal(t, uint64(0), table.Columns[0].ID)
+	require.Equal(t, int64(0), table.Columns[0].ID)
 	require.Equal(t, "test", table.Columns[0].Name)
 	require.Equal(t, reflect.String, table.Columns[0].Type)
 	require.False(t, table.Columns[0].NonNull)

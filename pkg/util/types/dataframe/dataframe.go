@@ -12,7 +12,7 @@ type Sort struct {
 }
 
 type Column struct {
-	ID       uint64
+	ID       int64
 	Name     string
 	TableRef string
 	items    Array
