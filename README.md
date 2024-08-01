@@ -123,5 +123,4 @@ mac=> select Employees.EmployeeID, Employees.FirstName, Employees.LastName, Empl
  7                    | "Tom"               | "Davis"            | null                   | 55000
  10                   | "Lisa"              | "Thomas"           | null                   | 59000
 (10 rows)
-
 ```

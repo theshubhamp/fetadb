@@ -1,0 +1,42 @@
+# name: test/sql/select_order.slt
+# description: order tests
+# group: [select]
+
+statement ok
+CREATE TABLE Departments__003(DepartmentID bigint PRIMARY KEY, DepartmentName string NOT NULL);
+
+statement ok
+CREATE TABLE Employees__003(EmployeeID bigint PRIMARY KEY, FirstName string NOT NULL, LastName string NOT NULL, DepartmentID bigint, Salary real);
+
+statement ok
+INSERT INTO Departments__003(DepartmentID, DepartmentName)
+      VALUES (1, 'HR'), (2, 'IT'), (3, 'Finance'), (4, 'Marketing'), (5, 'Operations'), (6, 'Research');
+
+statement ok
+INSERT INTO Employees__003(EmployeeID, FirstName, LastName, DepartmentID, Salary)
+      VALUES  (1, 'John', 'Doe', 1, 60000),
+              (2, 'Jane', 'Smith', 2, 75000),
+              (3, 'Mike', 'Johnson', 3, 65000),
+              (4, 'Emily', 'Brown', 2, 72000),
+              (5, 'David', 'Lee', 4, 68000),
+              (6, 'Sarah', 'Wilson', 1, 62000),
+              (7, 'Tom', 'Davis', NULL, 55000),
+              (8, 'Anna', 'Taylor', 3, 70000),
+              (9, 'Chris', 'Anderson', 5, 58000),
+              (10, 'Lisa', 'Thomas', NULL, 59000);
+
+query ITTII
+select Employees__003.EmployeeID, Employees__003.FirstName, Employees__003.LastName, Employees__003.DepartmentID, Employees__003.Salary
+      FROM Employees__003
+      ORDER BY Employees__003.departmentid DESC, Employees__003.salary ASC;
+----
+9 "Chris" "Anderson" 5 58000
+5 "David" "Lee" 4 68000
+3 "Mike" "Johnson" 3 65000
+8 "Anna" "Taylor" 3 70000
+4 "Emily" "Brown" 2 72000
+2 "Jane" "Smith" 2 75000
+1 "John" "Doe" 1 60000
+6 "Sarah" "Wilson" 1 62000
+7 "Tom" "Davis" null 55000
+10 "Lisa" "Thomas" null 59000
