@@ -1,0 +1,40 @@
+# name: test/sql/select_order.slt
+# description: order tests
+# group: [select]
+
+statement ok
+CREATE TABLE Departments__004(DepartmentID bigint PRIMARY KEY, DepartmentName string NOT NULL);
+
+statement ok
+CREATE TABLE Employees__004(EmployeeID bigint PRIMARY KEY, FirstName string NOT NULL, LastName string NOT NULL, DepartmentID bigint, Salary real);
+
+statement ok
+INSERT INTO Departments__004(DepartmentID, DepartmentName)
+      VALUES (1, 'HR'), (2, 'IT'), (3, 'Finance'), (4, 'Marketing'), (5, 'Operations'), (6, 'Research');
+
+statement ok
+INSERT INTO Employees__004(EmployeeID, FirstName, LastName, DepartmentID, Salary)
+      VALUES  (1, 'John', 'Doe', 1, 60000),
+              (2, 'Jane', 'Smith', 2, 75000),
+              (3, 'Mike', 'Johnson', 3, 65000),
+              (4, 'Emily', 'Brown', 2, 72000),
+              (5, 'David', 'Lee', 4, 68000),
+              (6, 'Sarah', 'Wilson', 1, 62000),
+              (7, 'Tom', 'Davis', NULL, 55000),
+              (8, 'Anna', 'Taylor', 3, 70000),
+              (9, 'Chris', 'Anderson', 5, 58000),
+              (10, 'Lisa', 'Thomas', NULL, 59000);
+
+query ITTII
+select Employees__004.EmployeeID, Employees__004.FirstName, Employees__004.LastName, Employees__004.DepartmentID, Employees__004.Salary
+      FROM Employees__004
+      WHERE Employees__004.salary >= 60000
+      ORDER BY Employees__004.departmentid DESC, Employees__004.salary ASC;
+----
+5 "David" "Lee" 4 68000
+3 "Mike" "Johnson" 3 65000
+8 "Anna" "Taylor" 3 70000
+4 "Emily" "Brown" 2 72000
+2 "Jane" "Smith" 2 75000
+1 "John" "Doe" 1 60000
+6 "Sarah" "Wilson" 1 62000
